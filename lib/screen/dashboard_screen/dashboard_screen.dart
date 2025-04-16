@@ -6,7 +6,7 @@ import '../home_screen/home_screen.dart';
 import '../home_screen/news_event_screen.dart';
 import '../home_screen/platform_screen.dart';
 import '../home_screen/stores_map_screen.dart';
-import '../luckdraw_screen.dart';
+import '../lucky_draw_screen.dart';
 import '../reward_screen.dart';
 
 class DashboardScreen extends StatefulWidget {

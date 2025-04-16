@@ -309,74 +309,76 @@ class LuckyDrawDetailScreen extends StatelessWidget {
                     //border: Border.all(color: Colors.blue, width: 2),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Column(
-                    children: [
-                      Image.asset('assets/images/Frame3.png', fit: BoxFit.cover),
-                      SizedBox(height: 15),
-                      Text('Honda 125 cc Bike',
-                          style:
-                              TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                      Text('Redeem the reward of Honda 125 cc Bike',
-                          style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-                      SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/images/endtoend1.png',
-                            width: 40,
-                            height: 40,
-                          ),
-                          SizedBox(width: 8),
-                          Text('Lucky Draw has ended',
-                              style: TextStyle(fontSize: 16, color: Colors.orange)),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 60.0),
-                        child: Row(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Image.asset('assets/images/Frame3.png', fit: BoxFit.cover),
+                        SizedBox(height: 15),
+                        Text('Honda 125 cc Bike',
+                            style:
+                                TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                        Text('Redeem the reward of Honda 125 cc Bike',
+                            style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                        SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.asset(
-                              'assets/images/image116.png',
+                              'assets/images/endtoend1.png',
                               width: 40,
                               height: 40,
                             ),
-                            SizedBox(height: 20),
-                            Text('Here is the Winners',
-                                style: TextStyle(fontSize: 16, color: Colors.blue)),
+                            SizedBox(width: 8),
+                            Text('Lucky Draw has ended',
+                                style: TextStyle(fontSize: 16, color: Colors.orange)),
                           ],
                         ),
-                      ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Image.asset(
-                            'assets/images/image116.png',
-                            width: 60,
-                            height: 60,
-                          ),
-                          SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 60.0),
+                          child: Row(
                             children: [
-                              Text('Muhammad Umar', style: TextStyle(fontSize: 16)),
-                              Text('Umarah Package', style: TextStyle(fontSize: 10)),
-
+                              Image.asset(
+                                'assets/images/image116.png',
+                                width: 40,
+                                height: 40,
+                              ),
+                              SizedBox(height: 20),
+                              Text('Here is the Winners',
+                                  style: TextStyle(fontSize: 16, color: Colors.blue)),
                             ],
                           ),
-                          Spacer(),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Image.asset(
-                              'assets/images/Mask_group.png',
-                              width: 80,
-                              height: 80,
+                        ),
+                        SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Image.asset(
+                              'assets/images/image116.png',
+                              width: 60,
+                              height: 60,
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Muhammad Umar', style: TextStyle(fontSize: 16)),
+                                Text('Umarah Package', style: TextStyle(fontSize: 10)),
+                    
+                              ],
+                            ),
+                            Spacer(),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Image.asset(
+                                'assets/images/Mask_group.png',
+                                width: 80,
+                                height: 80,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
