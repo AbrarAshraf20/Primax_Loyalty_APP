@@ -1,7 +1,5 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:primax/routes/app_routes.dart';
-import 'package:primax/screen/splash_screen/splash_screen.dart';
 import 'package:primax/services/connectivity_service.dart';
 import 'package:provider/provider.dart';
 import 'core/di/service_locator.dart';
@@ -10,6 +8,8 @@ import 'core/providers/points_provider.dart';
 import 'core/providers/profile_provider.dart';
 import 'core/providers/rewards_provider.dart';
 import 'core/providers/scan_provider.dart';
+import 'routes/routes.dart';
+
 
 void main() {
   // Initialize dependency injection
@@ -30,20 +30,23 @@ class MyApp extends StatelessWidget {
           create: (_) => locator<ConnectivityService>(),
         ),
 
-        // Create AuthProvider first - VERY IMPORTANT since others depend on it
+        // Auth provider needs to be first as others depend on it
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(),
         ),
 
         // Other providers
-        ChangeNotifierProvider<ProfileProvider>(
+        ChangeNotifierProxyProvider<AuthProvider, ProfileProvider>(
           create: (_) => ProfileProvider(),
+          update: (_, auth, profileProvider) => profileProvider!,
         ),
-        ChangeNotifierProvider<RewardsProvider>(
+        ChangeNotifierProxyProvider<ProfileProvider, RewardsProvider>(
           create: (_) => RewardsProvider(),
+          update: (_, profile, rewardsProvider) => rewardsProvider!,
         ),
-        ChangeNotifierProvider<ScanProvider>(
+        ChangeNotifierProxyProvider<ProfileProvider, ScanProvider>(
           create: (_) => ScanProvider(),
+          update: (_, profile, scanProvider) => scanProvider!,
         ),
         ChangeNotifierProvider<PointsProvider>(
           create: (_) => PointsProvider(),
@@ -58,13 +61,61 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
               useMaterial3: true,
             ),
-            // home: SplashScreen(),
-            // Use named routes for navigation
-            initialRoute: AppRoutes.splash,
-            routes: AppRoutes.routes,
+            initialRoute: Routes.splash,
+            routes: Routes.routes,
+            // Use a navigation observer to handle authentication state
+            navigatorObservers: [
+              AuthNavigationObserver(authProvider),
+            ],
           );
         },
       ),
     );
+  }
+}
+
+/// Observer to handle navigation based on authentication state
+class AuthNavigationObserver extends NavigatorObserver {
+  final AuthProvider authProvider;
+
+  AuthNavigationObserver(this.authProvider);
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+    _checkAuthenticationForRoute(route);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+    if (newRoute != null) {
+      _checkAuthenticationForRoute(newRoute);
+    }
+  }
+
+  void _checkAuthenticationForRoute(Route<dynamic> route) {
+    // Skip checking for certain routes
+    final String routeName = route.settings.name ?? '';
+
+    if (routeName == Routes.splash ||
+        routeName == Routes.login ||
+        routeName == Routes.otp ||
+        routeName == Routes.forgotPassword ||
+        routeName == Routes.resetPassword ||
+        routeName == Routes.register) {
+      return;
+    }
+
+    // Check if user is authenticated for protected routes
+    if (!authProvider.isLoggedIn) {
+      // If not authenticated, redirect to login after a short delay
+      Future.delayed(const Duration(milliseconds: 100), () {
+        navigator?.pushNamedAndRemoveUntil(
+          Routes.login,
+              (route) => false,
+        );
+      });
+    }
   }
 }

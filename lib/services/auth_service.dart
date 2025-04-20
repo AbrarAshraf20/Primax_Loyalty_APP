@@ -4,7 +4,7 @@ import '../core/network/api_client.dart';
 import '../core/network/api_exception.dart';
 import '../core/network/token_manager.dart';
 import '../core/di/service_locator.dart';
-import '../models/user.dart';
+import '../models/user_model.dart';
 
 class AuthService {
   final ApiClient _apiClient = locator<ApiClient>();

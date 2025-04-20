@@ -324,7 +324,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success && mounted) {
         // Navigate to home screen and clear back stack
         Navigator.of(context).pushNamedAndRemoveUntil(
-          '/home',
+          '/dashboard',
               (route) => false,
         );
       }

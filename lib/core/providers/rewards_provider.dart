@@ -1,8 +1,8 @@
 // lib/providers/rewards_provider.dart
 import 'package:flutter/foundation.dart';
 import 'package:primax/core/di/service_locator.dart';
-import 'package:primax/models/reward.dart';
 import 'package:primax/services/rewards_service.dart';
+import '../../models/reward_model.dart';
 import '../network/api_exception.dart';
 import 'profile_provider.dart';
 

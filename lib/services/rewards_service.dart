@@ -2,7 +2,7 @@
 import '../core/network/api_client.dart';
 import '../core/network/api_exception.dart';
 import '../core/di/service_locator.dart';
-import '../models/reward.dart';
+import '../models/reward_model.dart';
 
 class RewardsService {
   final ApiClient _apiClient = locator<ApiClient>();
@@ -12,8 +12,8 @@ class RewardsService {
     try {
       final response = await _apiClient.get('/rewards');
 
-      if (response.data != null && response.data['rewards'] != null) {
-        final rewardsData = response.data['rewards'] as List;
+      if (response.data != null && response.data['data'] != null) {
+        final rewardsData = response.data['data'] as List;
 
         return rewardsData.map((rewardJson) => Reward.fromJson(rewardJson)).toList();
       } else {
@@ -29,8 +29,8 @@ class RewardsService {
     try {
       final response = await _apiClient.get('/club-rewards');
 
-      if (response.data != null && response.data['rewards'] != null) {
-        final rewardsData = response.data['rewards'] as List;
+      if (response.data != null && response.data['data'] != null) {
+        final rewardsData = response.data['data'] as List;
 
         return rewardsData.map((rewardJson) => Reward.fromJson(rewardJson)).toList();
       } else {
@@ -46,8 +46,8 @@ class RewardsService {
     try {
       final response = await _apiClient.get('/featured-rewards');
 
-      if (response.data != null && response.data['rewards'] != null) {
-        final rewardsData = response.data['rewards'] as List;
+      if (response.data != null && response.data['data'] != null) {
+        final rewardsData = response.data['data'] as List;
 
         return rewardsData.map((rewardJson) => Reward.fromJson(rewardJson)).toList();
       } else {

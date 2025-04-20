@@ -2,9 +2,9 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:primax/core/network/api_exception.dart';
-import 'package:primax/models/user.dart';
 import 'package:primax/services/profile_service.dart';
 
+import '../../models/user_model.dart';
 import '../di/service_locator.dart';
 import 'auth_provider.dart';
 
@@ -21,7 +21,7 @@ class ProfileProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   User? get userProfile => _userProfile;
-  List<Address> get addresses => _userProfile?.addresses ?? [];
+  // List<Address> get addresses => _userProfile?.addresses ?? [];
 
   // Get profile details
   Future<void> getProfileDetails() async {
@@ -109,58 +109,58 @@ class ProfileProvider extends ChangeNotifier {
   }
 
   // Add or update address
-  Future<bool> addUpdateAddress({
-    required String address,
-    String? street,
-    String? postcode,
-    String? apartment,
-    required String label,
-  }) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final newAddress = await _profileService.addUpdateAddress(
-        address: address,
-        street: street,
-        postcode: postcode,
-        apartment: apartment,
-        label: label,
-      );
-
-      // Update local user profile with new address
-      if (_userProfile != null) {
-        final addresses = List<Address>.from(_userProfile!.addresses);
-
-        // Check if address already exists (by ID)
-        final index = addresses.indexWhere((a) => a.id == newAddress.id);
-        if (index >= 0) {
-          // Update existing address
-          addresses[index] = newAddress;
-        } else {
-          // Add new address
-          addresses.add(newAddress);
-        }
-
-        // Update user profile with new addresses
-        _userProfile = _userProfile!.copyWith(addresses: addresses);
-
-        // Update auth provider with latest user data
-        _authProvider.updateUserData(_userProfile!);
-      }
-
-      _setLoading(false);
-      return true;
-    } on ApiException catch (e) {
-      _setError(e.message);
-      _setLoading(false);
-      return false;
-    } catch (e) {
-      _setError('An unexpected error occurred');
-      _setLoading(false);
-      return false;
-    }
-  }
+  // Future<bool> addUpdateAddress({
+  //   required String address,
+  //   String? street,
+  //   String? postcode,
+  //   String? apartment,
+  //   required String label,
+  // }) async {
+  //   _setLoading(true);
+  //   _clearError();
+  //
+  //   try {
+  //     final newAddress = await _profileService.addUpdateAddress(
+  //       address: address,
+  //       street: street,
+  //       postcode: postcode,
+  //       apartment: apartment,
+  //       label: label,
+  //     );
+  //
+  //     // Update local user profile with new address
+  //     if (_userProfile != null) {
+  //       final addresses = List<Address>.from(_userProfile!.addresses);
+  //
+  //       // Check if address already exists (by ID)
+  //       final index = addresses.indexWhere((a) => a.id == newAddress.id);
+  //       if (index >= 0) {
+  //         // Update existing address
+  //         addresses[index] = newAddress;
+  //       } else {
+  //         // Add new address
+  //         addresses.add(newAddress);
+  //       }
+  //
+  //       // Update user profile with new addresses
+  //       _userProfile = _userProfile!.copyWith(addresses: addresses);
+  //
+  //       // Update auth provider with latest user data
+  //       _authProvider.updateUserData(_userProfile!);
+  //     }
+  //
+  //     _setLoading(false);
+  //     return true;
+  //   } on ApiException catch (e) {
+  //     _setError(e.message);
+  //     _setLoading(false);
+  //     return false;
+  //   } catch (e) {
+  //     _setError('An unexpected error occurred');
+  //     _setLoading(false);
+  //     return false;
+  //   }
+  // }
 
   // Helper methods
   void _setLoading(bool loading) {
@@ -180,7 +180,7 @@ class ProfileProvider extends ChangeNotifier {
   // Update user points (called from other providers)
   void updatePoints(int points) {
     if (_userProfile != null) {
-      _userProfile = _userProfile!.copyWith(points: points);
+      // _userProfile = _userProfile!.copyWith(points: points);
 
       // Update auth provider with latest user data
       _authProvider.updateUserData(_userProfile!);

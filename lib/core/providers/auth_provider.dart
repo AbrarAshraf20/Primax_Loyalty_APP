@@ -1,9 +1,9 @@
 // lib/providers/auth_provider.dart
 import 'package:flutter/foundation.dart';
 import 'package:primax/core/di/service_locator.dart';
-import 'package:primax/models/user.dart';
 import 'package:primax/services/auth_service.dart';
 
+import '../../models/user_model.dart';
 import '../network/api_exception.dart';
 
 
