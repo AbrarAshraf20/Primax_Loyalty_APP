@@ -1,0 +1,2 @@
+/Users/skapple/Documents/MyProjects/primax_luck_draw_app/android/app/.cxx/RelWithDebInfo/6t0731p6/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/skapple/Documents/MyProjects/primax_luck_draw_app/android/app/.cxx/RelWithDebInfo/6t0731p6/armeabi-v7a/CMakeFiles/rebuild_cache.dir
