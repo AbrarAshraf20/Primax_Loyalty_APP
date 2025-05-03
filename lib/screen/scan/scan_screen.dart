@@ -1,12 +1,13 @@
 // lib/screen/scan/scan_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:primax/core/providers/profile_provider.dart';
 import 'package:primax/core/providers/scan_provider.dart';
 import 'package:primax/screen/scan/veryfiyserial.dart';
 import 'package:primax/services/connectivity_service.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/custom_button.dart';
-
+import 'barcode_scan_screen.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen> {
   final TextEditingController _barcodeController = TextEditingController();
+  bool _isProcessing = false;
 
   @override
   void dispose() {
@@ -45,7 +47,7 @@ class _ScanScreenState extends State<ScanScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
                 // App bar section
                 Padding(
@@ -88,10 +90,10 @@ class _ScanScreenState extends State<ScanScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.workspace_premium, color: Colors.white, size: 16),
+                            SvgPicture.asset('assets/icons/Group2.svg'),
                             const SizedBox(width: 4),
-                            Text('01',
-                              // '${profileProvider.userProfile?.points ?? 0}',
+                            Text(
+                              '${profileProvider.userProfile?.tokens ?? 0}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -104,15 +106,15 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
 
                 // Scan card
-                _buildScanCard(),
+                _buildScanCard(context, isConnected),
 
                 const SizedBox(height: 20),
 
                 // Manual entry card
-                _buildManualEntryCard(scanProvider, isConnected),
+                _buildManualEntryCard(context, scanProvider, isConnected),
               ],
             ),
           ),
@@ -121,7 +123,7 @@ class _ScanScreenState extends State<ScanScreen> {
     );
   }
 
-  Widget _buildScanCard() {
+  Widget _buildScanCard(BuildContext context, bool isConnected) {
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -142,17 +144,10 @@ class _ScanScreenState extends State<ScanScreen> {
             const SizedBox(height: 20),
 
             // Camera icon
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.qr_code_scanner,
-                size: 84,
-                color: Colors.white,
-              ),
+            SvgPicture.asset(
+              'assets/icons/XMLID.svg',
+              height: 120,
+              color: Colors.white,
             ),
 
             const SizedBox(height: 30),
@@ -180,21 +175,19 @@ class _ScanScreenState extends State<ScanScreen> {
 
             // Scan button
             GestureDetector(
-              onTap: () {
-                _launchBarcodeScannerCamera();
-              },
+              onTap: isConnected ? () => _launchBarcodeScannerCamera(context) : null,
               child: Container(
                 width: double.infinity,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isConnected ? Colors.white : Colors.grey[300],
                   borderRadius: BorderRadius.circular(25),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    "Scan Now",
+                    isConnected ? "Scan Now" : "No Internet Connection",
                     style: TextStyle(
-                      color: Colors.black,
+                      color: isConnected ? Colors.black : Colors.grey[600],
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -210,28 +203,25 @@ class _ScanScreenState extends State<ScanScreen> {
     );
   }
 
-  Widget _buildManualEntryCard(ScanProvider scanProvider, bool isConnected) {
+  Widget _buildManualEntryCard(BuildContext context, ScanProvider scanProvider, bool isConnected) {
     return Card(
-      color: Colors.grey.shade100,
+      color: Colors.grey.shade300,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 15),
 
             // Card image
             GestureDetector(
               onTap: () {
-                if (isConnected) {
-                  _showSampleBarcodeDialog();
-                }
+                // Optional: Show sample barcode image
               },
               child: Image.asset(
                 'assets/images/Untitled.png',
-                height: 100,
-                fit: BoxFit.contain,
+                scale: 5,
               ),
             ),
 
@@ -240,10 +230,10 @@ class _ScanScreenState extends State<ScanScreen> {
             // Title
             const Text(
               "Enter Product Barcode",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
 
             // Barcode input
             TextField(
@@ -258,6 +248,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 fillColor: Colors.white,
               ),
               keyboardType: TextInputType.text,
+              enabled: !_isProcessing,
             ),
 
             const SizedBox(height: 10),
@@ -266,10 +257,10 @@ class _ScanScreenState extends State<ScanScreen> {
             const Text(
               "Use Camera to scan Privex card & add Loyalty points to your account",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.black87),
+              style: TextStyle(fontSize: 15, color: Colors.black87),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // Error message
             if (scanProvider.errorMessage.isNotEmpty)
@@ -306,12 +297,12 @@ class _ScanScreenState extends State<ScanScreen> {
               width: double.infinity,
               text: scanProvider.isLoading ? "Processing..." : "Submit",
               isLoading: scanProvider.isLoading,
-              onPressed: ()=>isConnected && _barcodeController.text.isNotEmpty
-                  ? () => _submitBarcode(scanProvider)
+              onPressed: ()=>isConnected && _barcodeController.text.isNotEmpty && !_isProcessing
+                  ?_submitBarcode(context, scanProvider)
                   : null,
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
             // Verify Serial link
             TextButton(
@@ -319,7 +310,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>  VerifySerial(),
+                    builder: (context) => const VerifySerial(),
                   ),
                 );
               },
@@ -328,239 +319,154 @@ class _ScanScreenState extends State<ScanScreen> {
                 style: TextStyle(color: Colors.blue),
               ),
             ),
-
-            const SizedBox(height: 10),
           ],
         ),
       ),
     );
   }
 
-  void _launchBarcodeScannerCamera() {
-    // In a real implementation, you'd use a barcode scanner package
-    // such as flutter_barcode_scanner or mobile_scanner
-
-    // For this example, we'll just show a dialog
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Camera Scanner'),
-        content: const Text('This would launch the barcode scanner camera in a real implementation.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Simulate scanning a barcode
-              _barcodeController.text = "SAMPLE123456";
-            },
-            child: const Text('Simulate Scan'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
+  Future<void> _launchBarcodeScannerCamera(BuildContext context) async {
+    final barcode = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BarcodeScannerScreen(),
       ),
     );
+
+    if (barcode != null && barcode.isNotEmpty) {
+      _barcodeController.text = barcode;
+
+      // Automatically submit the barcode
+      final scanProvider = Provider.of<ScanProvider>(context, listen: false);
+      _submitBarcode(context, scanProvider);
+    }
   }
 
-  void _showSampleBarcodeDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Close button
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-
-              // Success icon
-              const Icon(
-                Icons.check_circle,
-                color: Colors.green,
-                size: 64,
-              ),
-
-              const SizedBox(height: 16),
-
-              // Title
-              const Text(
-                "Congratulations",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                "You Have Earned",
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Points earned
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF00C853), // Green
-                      Color(0xFF00B0FF), // Blue
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  '100',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              const Text(
-                "Points",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _submitBarcode(ScanProvider scanProvider) async {
-    if (_barcodeController.text.isEmpty) {
+  Future<void> _submitBarcode(BuildContext context, ScanProvider scanProvider) async {
+    if (_barcodeController.text.isEmpty || _isProcessing) {
       return;
     }
+
+    setState(() {
+      _isProcessing = true;
+    });
 
     final barcode = _barcodeController.text.trim();
     final success = await scanProvider.scanBarcode(barcode);
 
+    setState(() {
+      _isProcessing = false;
+    });
+
     if (success) {
       // Show success dialog
-      _showSuccessDialog(scanProvider.lastPointsEarned);
+      _showSuccessDialog(context, scanProvider.lastPointsEarned);
 
       // Clear the input
       _barcodeController.clear();
     }
   }
 
-  void _showSuccessDialog(int pointsEarned) {
+  void _showSuccessDialog(BuildContext context, int pointsEarned) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Close button
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-
-              // Success icon
-              Image.asset(
-                'assets/images/image116.png',
-                height: 80,
-                width: 80,
-              ),
-
-              const SizedBox(height: 16),
-
-              // Title
-              const Text(
-                "Congratulations",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              const Text(
-                "You Have Earned",
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Points earned
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF00C853), // Green
-                      Color(0xFF00B0FF), // Blue
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.workspace_premium, color: Colors.white),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$pointsEarned',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              const Text(
-                "Points",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-            ],
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
           ),
-        ),
-      ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Close Button
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: Image.asset(
+                      'assets/images/image120.png',
+                      width: 40,
+                      height: 40,
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: Image.asset('assets/images/image116.png'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+
+                // Title
+                const Text(
+                  "Congratulations",
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "You Have Earned",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 5),
+
+                Padding(
+                  padding: const EdgeInsets.only(left: 15, right: 5.0),
+                  child: Container(
+                    width: 90,
+                    margin: const EdgeInsets.only(right: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF00C853), // Green
+                          Color(0xFF00B0FF), // Blue
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        SvgPicture.asset('assets/icons/Group2.svg'),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$pointsEarned',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "Points",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

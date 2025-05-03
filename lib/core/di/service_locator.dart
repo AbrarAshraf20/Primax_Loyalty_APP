@@ -1,9 +1,13 @@
 // lib/core/di/service_locator.dart
 import 'package:get_it/get_it.dart';
+import 'package:primax/core/providers/lucky_draw_provider.dart';
 import 'package:primax/services/connectivity_service.dart';
+import 'package:primax/services/lucky_draw_service.dart';
 
+import '../../services/donation_service.dart' show DonationService;
 import '../network/api_client.dart';
 import '../providers/auth_provider.dart';
+import '../providers/donation_provider.dart';
 import '../providers/points_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/rewards_provider.dart';
@@ -37,6 +41,8 @@ void setupServiceLocator() {
   locator.registerLazySingleton<RewardsService>(() => RewardsService());
   locator.registerLazySingleton<ScanService>(() => ScanService());
   locator.registerLazySingleton<PointsService>(() => PointsService());
+  locator.registerLazySingleton<DonationService>(() => DonationService());
+  locator.registerLazySingleton<LuckyDrawService>(() => LuckyDrawService());
 
   // Register providers
   locator.registerFactory<AuthProvider>(() => AuthProvider());
@@ -44,4 +50,8 @@ void setupServiceLocator() {
   locator.registerFactory<RewardsProvider>(() => RewardsProvider());
   locator.registerFactory<ScanProvider>(() => ScanProvider());
   locator.registerFactory<PointsProvider>(() => PointsProvider());
+  locator.registerFactory<DonationProvider>(() => DonationProvider());
+  locator.registerFactory<LuckyDrawProvider>(() => LuckyDrawProvider());
+
+
 }

@@ -1,5 +1,7 @@
 // lib/routes/routes.dart
 import 'package:flutter/material.dart';
+import 'package:primax/screen/lucky_draw/lucky_draw_detail_screen.dart';
+import 'package:primax/screen/lucky_draw/lucky_draw_screen.dart';
 import 'package:primax/screen/scan/veryfiyserial.dart';
 
 // Import screens
@@ -12,7 +14,7 @@ import '../screen/reward_screen.dart';
 import '../screen/luckdraw_screen.dart';
 import '../screen/donation_screen.dart';
 import '../screen/dashboard_screen/dashboard_screen.dart';
-import '../screen/dashboard_screen/dashboardscreen1.dart';
+import '../screen/dashboard_screen/dashboard_screen.dart';
 import '../screen/forgot_passowrd/forgot_password.dart';
 import '../screen/reset_password/reset_password.dart';
 import '../screen/reset_password/set_password.dart';
@@ -32,6 +34,7 @@ class Routes {
   static const String verifySerial = '/verify-serial';
   static const String rewards = '/rewards';
   static const String luckyDraw = '/lucky-draw';
+  static const String luckyDrawDetails = '/lucky-draw-details';
   static const String donation = '/donation';
   static const String pointsHistory = '/points-history';
   static const String forgotPassword = '/forgot-password';
@@ -44,12 +47,13 @@ class Routes {
     login: (context) => const LoginScreen(),
     otp: (context) => OtpScreen(),
     home: (context) => HomeScreen1(),
-    dashboard: (context) => DashboardScreen1(),
+    dashboard: (context) => DashboardScreen(),
     profile: (context) => UserProfileScreen(),
     scan: (context) =>  ScanScreen(),
     verifySerial: (context) =>  VerifySerial(),
     rewards: (context) =>  RewardScreen(),
     luckyDraw: (context) => LuckyDrawScreen(),
+    luckyDrawDetails: (context) => LuckyDrawDetailScreen(),
     donation: (context) => DonationScreen(),
     // pointsHistory: (context) =>  PointsHistoryScreen(),
     forgotPassword: (context) => const ForgotPassword(),

@@ -111,66 +111,66 @@ class ProfileService {
     }
   }
 
-  // // Add or update address
-  // Future<Address> addUpdateAddress({
-  //   required String address,
-  //   String? street,
-  //   String? postcode,
-  //   String? apartment,
-  //   required String label,
-  // }) async {
-  //   try {
-  //     final fields = {
-  //       'address': address,
-  //       'label': label,
-  //     };
-  //
-  //     if (street != null) fields['street'] = street;
-  //     if (postcode != null) fields['postcode'] = postcode;
-  //     if (apartment != null) fields['apartment'] = apartment;
-  //
-  //     final response = await _apiClient.postFormData(
-  //       '/address',
-  //       fields: fields,
-  //     );
-  //
-  //     if (response.data != null) {
-  //       final addressData = response.data['address'] ?? response.data;
-  //
-  //       // Create and return address
-  //       final newAddress = Address.fromJson(addressData);
-  //
-  //       // Update cached user data with new address
-  //       final cachedUserData = await TokenManager.getUserData();
-  //       if (cachedUserData != null) {
-  //         final userData = jsonDecode(cachedUserData);
-  //
-  //         // Add or update the address in the list
-  //         List<dynamic> addresses = userData['addresses'] ?? [];
-  //         bool found = false;
-  //
-  //         for (int i = 0; i < addresses.length; i++) {
-  //           if (addresses[i]['id'] == newAddress.id) {
-  //             addresses[i] = newAddress.toJson();
-  //             found = true;
-  //             break;
-  //           }
-  //         }
-  //
-  //         if (!found) {
-  //           addresses.add(newAddress.toJson());
-  //         }
-  //
-  //         userData['addresses'] = addresses;
-  //         await TokenManager.saveUserData(jsonEncode(userData));
-  //       }
-  //
-  //       return newAddress;
-  //     } else {
-  //       throw ApiException(message: 'Invalid response from server');
-  //     }
-  //   } on ApiException {
-  //     rethrow;
-  //   }
-  // }
+// // Add or update address
+// Future<Address> addUpdateAddress({
+//   required String address,
+//   String? street,
+//   String? postcode,
+//   String? apartment,
+//   required String label,
+// }) async {
+//   try {
+//     final fields = {
+//       'address': address,
+//       'label': label,
+//     };
+//
+//     if (street != null) fields['street'] = street;
+//     if (postcode != null) fields['postcode'] = postcode;
+//     if (apartment != null) fields['apartment'] = apartment;
+//
+//     final response = await _apiClient.postFormData(
+//       '/address',
+//       fields: fields,
+//     );
+//
+//     if (response.data != null) {
+//       final addressData = response.data['address'] ?? response.data;
+//
+//       // Create and return address
+//       final newAddress = Address.fromJson(addressData);
+//
+//       // Update cached user data with new address
+//       final cachedUserData = await TokenManager.getUserData();
+//       if (cachedUserData != null) {
+//         final userData = jsonDecode(cachedUserData);
+//
+//         // Add or update the address in the list
+//         List<dynamic> addresses = userData['addresses'] ?? [];
+//         bool found = false;
+//
+//         for (int i = 0; i < addresses.length; i++) {
+//           if (addresses[i]['id'] == newAddress.id) {
+//             addresses[i] = newAddress.toJson();
+//             found = true;
+//             break;
+//           }
+//         }
+//
+//         if (!found) {
+//           addresses.add(newAddress.toJson());
+//         }
+//
+//         userData['addresses'] = addresses;
+//         await TokenManager.saveUserData(jsonEncode(userData));
+//       }
+//
+//       return newAddress;
+//     } else {
+//       throw ApiException(message: 'Invalid response from server');
+//     }
+//   } on ApiException {
+//     rethrow;
+//   }
+// }
 }

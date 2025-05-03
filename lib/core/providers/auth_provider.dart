@@ -1,11 +1,10 @@
-// lib/providers/auth_provider.dart
+// lib/core/providers/auth_provider.dart
 import 'package:flutter/foundation.dart';
 import 'package:primax/core/di/service_locator.dart';
 import 'package:primax/services/auth_service.dart';
-
 import '../../models/user_model.dart';
 import '../network/api_exception.dart';
-
+import '../network/token_manager.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = locator<AuthService>();
@@ -46,6 +45,44 @@ class AuthProvider extends ChangeNotifier {
       _setError('Error checking login status');
     } finally {
       _setLoading(false);
+    }
+  }
+
+  // Check saved credentials and auto-login if remember me is enabled
+  Future<bool> checkSavedCredentials() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      // Get saved credentials
+      final credentials = await TokenManager.getSavedCredentials();
+
+      if (credentials == null) {
+        _setLoading(false);
+        return false;
+      }
+
+      final identifier = credentials['identifier'];
+      final password = credentials['password'];
+
+      if (identifier == null || password == null) {
+        _setLoading(false);
+        return false;
+      }
+
+      // Try to login with saved credentials
+      return await login(
+        identifier: identifier,
+        password: password,
+        rememberMe: true,
+        silent: true, // Don't show errors for auto-login
+      );
+    } catch (e) {
+      if (!_isSilent) {
+        _setError('Auto-login failed');
+      }
+      _setLoading(false);
+      return false;
     }
   }
 
@@ -142,14 +179,19 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Flag to track if we're in a silent auto-login
+  bool _isSilent = false;
+
   // Login
   Future<bool> login({
     required String identifier,
     required String password,
     bool rememberMe = true,
+    bool silent = false,
   }) async {
     _setLoading(true);
     _clearError();
+    _isSilent = silent;
 
     try {
       final user = await _authService.login(
@@ -158,18 +200,28 @@ class AuthProvider extends ChangeNotifier {
         rememberMe: rememberMe,
       );
 
+      // Save credentials if remember me is checked
+      await TokenManager.saveUserCredentials(identifier, password, rememberMe);
+
       _currentUser = user;
       _isLoggedIn = true;
 
       _setLoading(false);
+      _isSilent = false;
       return true;
     } on ApiException catch (e) {
-      _setError(e.message);
+      if (!silent) {
+        _setError(e.message);
+      }
       _setLoading(false);
+      _isSilent = false;
       return false;
     } catch (e) {
-      _setError('An unexpected error occurred');
+      if (!silent) {
+        _setError('An unexpected error occurred');
+      }
       _setLoading(false);
+      _isSilent = false;
       return false;
     }
   }
@@ -185,6 +237,9 @@ class AuthProvider extends ChangeNotifier {
       if (success) {
         _currentUser = null;
         _isLoggedIn = false;
+
+        // Clear saved credentials and tokens
+        await TokenManager.clearAll();
       }
 
       _setLoading(false);

@@ -1,9 +1,12 @@
 // lib/screen/lucky_draw_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:primax/core/providers/lucky_draw_provider.dart';
+import 'package:primax/core/providers/profile_provider.dart';
+import 'package:primax/models/lucky_draw.dart';
+import 'package:primax/routes/routes.dart';
 import 'package:provider/provider.dart';
-import '../core/providers/network_status_provider.dart';
-import '../widgets/network_status_indicator.dart';
+import '../../widgets/network_status_indicator.dart';
 
 class LuckyDrawScreen extends StatefulWidget {
   const LuckyDrawScreen({Key? key}) : super(key: key);
@@ -81,7 +84,7 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
           child: Column(
             children: [
               // App Bar section
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -95,52 +98,62 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Icon(Icons.arrow_back),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back_ios, size: 16),
+                        onPressed: () => Navigator.pop(context),
+                      ),
                     ),
                   ),
                   const Text(
                     'Lucky Draw',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFF00C853),
-                          Color(0xFF00B0FF),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.star, color: Colors.white, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '160',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                  Consumer<ProfileProvider>(
+                    builder: (context, profileProvider, _) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xFF00C853), // Green
+                              Color(0xFF00B0FF), // Blue
+                            ],
                           ),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      ],
-                    ),
-                  )
+                        child: Row(
+                          children: [
+                            SvgPicture.asset('assets/icons/Group2.svg'),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${profileProvider.userProfile?.tokens ?? 0}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
 
               // Lucky draw list
               Expanded(
-                child: ListView.builder(
-                  itemCount: provider.luckyDraws.length,
-                  itemBuilder: (context, index) {
-                    final draw = provider.luckyDraws[index];
-                    return _buildLuckyDrawCard(context, draw);
-                  },
+                child: RefreshIndicator(
+                  onRefresh: () => provider.fetchLuckyDraws(),
+                  child: ListView.builder(
+                    itemCount: provider.luckyDraws.length,
+                    itemBuilder: (context, index) {
+                      final draw = provider.luckyDraws[index];
+                      return _buildLuckyDrawCard(context, draw);
+                    },
+                  ),
                 ),
               ),
             ],
@@ -150,38 +163,35 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
     );
   }
 
-  Widget _buildLuckyDrawCard(BuildContext context, draw) {
+  Widget _buildLuckyDrawCard(BuildContext context, LuckyDraw draw) {
     return GestureDetector(
       onTap: () {
         Provider.of<LuckyDrawProvider>(context, listen: false).selectDraw(draw);
-        Navigator.pushNamed(context, '/lucky-draw-details');
+        Navigator.pushNamed(context, Routes.luckyDrawDetails);
       },
       child: Card(
         margin: const EdgeInsets.only(bottom: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        color: const Color(0xffF4F4F6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image section
+            // Image section - Using a placeholder since the API doesn't provide an image
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-              child: Image.network(
-                draw.imageUrl,
+              child: Image.asset(
+                'assets/images/Frame62.png', // Default image
                 fit: BoxFit.cover,
                 height: 180,
                 width: double.infinity,
-                errorBuilder: (ctx, error, _) => Container(
-                  height: 180,
-                  color: Colors.grey[300],
-                  child: const Center(child: Icon(Icons.error)),
-                ),
               ),
             ),
 
             // Content section
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Text info
@@ -190,32 +200,53 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          draw.title,
+                          draw.name,
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 4),
                         Text(
-                          draw.description,
+                          'Points Required: ${draw.minimumPoints}',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
+                            fontSize: 14,
+                            color: Colors.grey[700],
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Status: ${draw.isActive ? 'Active' : 'Inactive'}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: draw.isActive ? Colors.green : Colors.red,
+                          ),
+                        ),
+                        if (draw.endTime != null)
+                          Text(
+                            'Ends on: ${_formatDate(draw.endTime!)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        Text(
+                          'Multiple entries: ${draw.allowsMultipleParticipation ? 'Allowed' : 'Not allowed'}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
                         ),
                       ],
                     ),
                   ),
 
-                  // Points circle and button
+                  // Action buttons
                   Column(
                     children: [
                       CircleAvatar(
                         radius: 17,
                         backgroundColor: const Color(0xffE9E9E9),
-                        child: Icon(Icons.arrow_forward),
+                        child: SvgPicture.asset('assets/icons/Vector.svg'),
                       ),
                       if (draw.isActive)
                         TextButton(
@@ -229,14 +260,18 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                           ),
                         )
                     ],
-                  )
+                  ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   void _showWinnerDialog(BuildContext context) {

@@ -1,15 +1,56 @@
-// lib/services/auth_service.dart
-import 'dart:convert';
-import '../core/network/api_client.dart';
-import '../core/network/api_exception.dart';
-import '../core/network/token_manager.dart';
-import '../core/di/service_locator.dart';
-import '../models/user_model.dart';
+// lib/services_service.dart
+import 'package:primax/core/di/service_locator.dart';
+import 'package:primax/core/network/api_client.dart';
+import 'package:primax/core/network/token_manager.dart';
+import 'package:primax/models/user_model.dart';
 
 class AuthService {
   final ApiClient _apiClient = locator<ApiClient>();
 
-  // Send OTP for registration
+  // Check if user is logged in
+  Future<bool> isLoggedIn() async {
+    final token = await TokenManager.getToken();
+    return token != null && token.isNotEmpty;
+  }
+
+  // Login
+  Future<User?> login({
+    required String identifier,
+    required String password,
+    required bool rememberMe,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/login',
+        body: {
+          'identifier': identifier,
+          'password': password,
+        },
+        requiresAuth: false,
+      );
+
+      // Extract token from response
+      final data = response.data;
+      final token = data['token'];
+      final refreshToken = data['refresh_token'];
+
+      // Save tokens
+      await TokenManager.saveToken(token);
+      if (refreshToken != null) {
+        await TokenManager.saveRefreshToken(refreshToken);
+      }
+
+      // Parse user data
+      final userData = data['user'];
+      final user = User.fromJson(userData);
+
+      return user;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Register - Send OTP
   Future<bool> sendOtp({
     required String name,
     required String email,
@@ -23,9 +64,9 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final response = await _apiClient.postFormData(
+      final response = await _apiClient.post(
         '/send-otp',
-        fields: {
+        body: {
           'name': name,
           'email': email,
           'phone_number': phoneNumber,
@@ -41,111 +82,44 @@ class AuthService {
       );
 
       return response.isSuccess;
-    } on ApiException {
+    } catch (e) {
       rethrow;
     }
   }
 
-  // Register user with OTP
-  Future<User> register({
+  // Register - Verify OTP
+  Future<User?> register({
     required String email,
     required String otp,
   }) async {
     try {
-      final response = await _apiClient.postFormData(
-        '/register',
-        fields: {
+      final response = await _apiClient.post(
+        '/verify-otp',
+        body: {
           'email': email,
           'otp': otp,
         },
         requiresAuth: false,
       );
 
-      if (response.data != null) {
-        final userData = response.data['user'];
-        final token = response.data['token'];
+      // Extract token from response
+      final data = response.data;
+      final token = data['token'];
+      final refreshToken = data['refresh_token'];
 
-        // Save token
-        if (token != null) {
-          await TokenManager.saveToken(token);
-        }
-
-        // Create and return user
-        final user = User.fromJson(userData);
-
-        // Save user data for offline use
-        await TokenManager.saveUserData(jsonEncode(userData));
-
-        return user;
-      } else {
-        throw ApiException(message: 'Invalid response from server');
+      // Save tokens
+      await TokenManager.saveToken(token);
+      if (refreshToken != null) {
+        await TokenManager.saveRefreshToken(refreshToken);
       }
-    } on ApiException {
-      rethrow;
-    }
-  }
 
-  // Login user
-  Future<User> login({
-    required String identifier,
-    required String password,
-    bool rememberMe = true,
-  }) async {
-    try {
-      final response = await _apiClient.post(
-        '/login',
-        body: {
-          'identifier': identifier,
-          'password': password,
-          'remember_me': rememberMe,
-        },
-        requiresAuth: false,
-      );
+      // Parse user data
+      final userData = data['user'];
+      final user = User.fromJson(userData);
 
-      if (response.data != null) {
-        final userData = response.data['user'];
-        final token = response.data['token'];
-
-        // Save token
-        if (token != null) {
-          await TokenManager.saveToken(token);
-        }
-
-        // Create and return user
-        final user = User.fromJson(userData);
-
-        // Save user data for offline use
-        await TokenManager.saveUserData(jsonEncode(userData));
-
-        return user;
-      } else {
-        throw ApiException(message: 'Invalid response from server');
-      }
-    } on ApiException {
-      rethrow;
-    }
-  }
-
-  // Logout user
-  Future<bool> logout() async {
-    try {
-      final response = await _apiClient.post('/logout');
-
-      // Clear token regardless of response
-      await TokenManager.clearAll();
-
-      return response.isSuccess;
+      return user;
     } catch (e) {
-      // Clear token even if request fails
-      await TokenManager.clearAll();
-
-      // Only rethrow if it's not a network error
-      if (e is ApiException) {
-        rethrow;
-      }
-
-      // Return true for network errors to indicate successful local logout
-      return true;
+      rethrow;
     }
   }
 
@@ -156,13 +130,9 @@ class AuthService {
     required String reEnterNewPassword,
   }) async {
     try {
-      if (newPassword != reEnterNewPassword) {
-        throw ApiException(message: "Passwords don't match");
-      }
-
-      final response = await _apiClient.postFormData(
+      final response = await _apiClient.post(
         '/reset-password',
-        fields: {
+        body: {
           'old_password': oldPassword,
           'new_password': newPassword,
           're_enter_new_password': reEnterNewPassword,
@@ -170,13 +140,47 @@ class AuthService {
       );
 
       return response.isSuccess;
-    } on ApiException {
+    } catch (e) {
       rethrow;
     }
   }
 
-  // Check if user is logged in
-  Future<bool> isLoggedIn() {
-    return TokenManager.isLoggedIn();
+  // Logout
+  Future<bool> logout() async {
+    try {
+      final response = await _apiClient.post('/logout');
+
+      // Clear tokens regardless of API response
+      await TokenManager.clearAll();
+
+      return response.isSuccess;
+    } catch (e) {
+      // Still clear tokens even if API call fails
+      await TokenManager.clearAll();
+      rethrow;
+    }
+  }
+
+  // Auto login with saved credentials
+  Future<User?> autoLogin() async {
+    // Check if remember me is enabled
+    final rememberMe = await TokenManager.isRememberMeEnabled();
+    if (!rememberMe) return null;
+
+    // Get saved credentials
+    final credentials = await TokenManager.getSavedCredentials();
+    if (credentials == null) return null;
+
+    final identifier = credentials['identifier'];
+    final password = credentials['password'];
+
+    if (identifier == null || password == null) return null;
+
+    // Try to login with saved credentials
+    return await login(
+      identifier: identifier,
+      password: password,
+      rememberMe: true,
+    );
   }
 }

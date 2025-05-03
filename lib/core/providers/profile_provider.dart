@@ -31,7 +31,7 @@ class ProfileProvider extends ChangeNotifier {
     try {
       final user = await _profileService.getProfileDetails();
       _userProfile = user;
-
+      print('user profile $_userProfile');
       // Update auth provider with latest user data
       _authProvider.updateUserData(user);
 

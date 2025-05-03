@@ -20,8 +20,8 @@ class ScanService {
         return {
           'success': true,
           'message': response.data['message'] ?? 'Scan successful',
-          'pointsEarned': response.data['points'] ?? 0,
-          'totalPoints': response.data['total_points'] ?? 0,
+          // 'pointsEarned': response.data['points'] ?? 0,
+          // 'totalPoints': response.data['total_points'] ?? 0,
         };
       } else {
         return {

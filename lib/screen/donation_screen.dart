@@ -1,20 +1,43 @@
+// lib/screen/donation_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import 'package:primax/core/utils/app_config.dart';
+import 'package:provider/provider.dart';
+import 'package:primax/core/providers/donation_provider.dart';
+import 'package:primax/core/providers/profile_provider.dart';
+import 'package:primax/services/connectivity_service.dart';
+import '../models/foundation.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/custom_text__form_field.dart';
 
-class DonationScreen extends StatelessWidget {
+class DonationScreen extends StatefulWidget {
+  const DonationScreen({Key? key}) : super(key: key);
+
+  @override
+  State<DonationScreen> createState() => _DonationScreenState();
+}
+
+class _DonationScreenState extends State<DonationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch foundations when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final donationProvider = Provider.of<DonationProvider>(context, listen: false);
+      donationProvider.getFoundations();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      /*appBar: _buildAppBar(),*/
-      body: Container(
+    final donationProvider = Provider.of<DonationProvider>(context);
+    final profileProvider = Provider.of<ProfileProvider>(context);
+    final isConnected = Provider.of<ConnectivityService>(context).isConnected;
 
-        decoration: BoxDecoration(
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage("assets/images/LuckyDraw.png"),
-            // Ensure the correct path
             fit: BoxFit.cover,
           ),
         ),
@@ -22,7 +45,8 @@ class DonationScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              SizedBox(height: 20,),
+              const SizedBox(height: 20),
+              // Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -30,27 +54,31 @@ class DonationScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                     elevation: 2,
                     child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: SvgPicture.asset("assets/icons/Back.svg")),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        icon: SvgPicture.asset("assets/icons/Back.svg"),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
                   ),
-                  Text(
+                  const Text(
                     'Donation',
-                    style: TextStyle(fontSize:20,fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Container(
-                    //margin: EdgeInsets.only(right: 16),
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,  // Start color at the top
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          const Color(0xFF00C853), // Default green
-                          const Color(0xFF00B0FF), // Default blue
+                          Color(0xFF00C853), // Green
+                          Color(0xFF00B0FF), // Blue
                         ],
                       ),
                       borderRadius: BorderRadius.circular(10),
@@ -58,15 +86,82 @@ class DonationScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         SvgPicture.asset('assets/icons/Group2.svg'),
-                        SizedBox(width: 4),
-                        Text('160', style: TextStyle(fontWeight:FontWeight.bold,color: Colors.white)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${profileProvider.userProfile?.tokens ?? 0}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
                   )
                 ],
               ),
-              SizedBox(height: 20,),
-              _buildLuckyDrawCard(context),
+              const SizedBox(height: 20),
+
+              // Error message
+              if (donationProvider.errorMessage.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    donationProvider.errorMessage,
+                    style: TextStyle(color: Colors.red.shade800),
+                  ),
+                ),
+
+              // Loading indicator
+              if (donationProvider.isLoading)
+                const Expanded(
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              // No foundations found
+              else if (donationProvider.foundations.isEmpty && !donationProvider.isLoading)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'No foundations found',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: isConnected ? () => donationProvider.getFoundations() : null,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              // Foundations list
+              else
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () => donationProvider.getFoundations(),
+                    child: ListView.builder(
+                      itemCount: donationProvider.foundations.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _buildFoundationCard(
+                            context,
+                            donationProvider.foundations[index],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -74,190 +169,133 @@ class DonationScreen extends StatelessWidget {
     );
   }
 
-  /*AppBar _buildAppBar() {
-    return AppBar(
-      leading: Padding(
-        padding: const EdgeInsets.only(
-          left: 15.0,
-        ),
-        child: CircleAvatar(
-            radius: 3,
-            backgroundColor: Colors.white,
-            child: Icon(Icons.arrow_back_ios)),
-      ),
-      title:
-          Text('      Donation', style: TextStyle(fontWeight: FontWeight.bold)),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 5.0),
-          child: Container(
-            margin: EdgeInsets.only(right: 16),
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,  // Start color at the top
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF00C853), // Default green
-                  const Color(0xFF00B0FF), // Default blue
-                ],
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                SvgPicture.asset('assets/icons/Group2.svg'),
-                SizedBox(width: 4),
-                Text('160', style: TextStyle(fontWeight:FontWeight.bold,color: Colors.white)),
-              ],
-            ),
-          ),
-        )
-      ],
-    );
-  }*/
+  Widget _buildFoundationCard(BuildContext context, Foundation foundation) {
+    String imageUrl = foundation.image;
+    // Check if the image URL is a relative path and prepend the API base URL if needed
+    if (imageUrl.startsWith('images/')) {
+      // Assuming your API base URL is configured in ApiClient
+      imageUrl = '${AppConfig.imageBaseUrl}${foundation.image}';
+    }
 
-  Widget _buildLuckyDrawCard(BuildContext context) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => DonationDetailScreen()),
+          MaterialPageRoute(
+            builder: (context) => DonationDetailScreen(foundation: foundation),
+          ),
         );
       },
-      child: Column(
-        children: [
-          Material(
-            elevation: 1,
+      child: Material(
+        elevation: 1,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xffF4F4F6),
             borderRadius: BorderRadius.circular(10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xffF4F4F6),
-                //border: Border.all(color: Colors.blue, width: 2),
-                borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  height: 200,
+                  width: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Fallback to asset image if network image fails
+                    return Image.asset(
+                      'assets/images/Frame4.png',
+                      fit: BoxFit.cover,
+                      height: 200,
+                      width: double.infinity,
+                    );
+                  },
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(10)),
-                    child: Image.asset('assets/images/Frame4.png',
-                        fit: BoxFit.cover),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      //  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('JDC Foundation Pakistan',
-                                style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold)),
-                            CircleAvatar(
-                              radius: 17,
-                              backgroundColor: Color(0xffE9E9E9),
-                              child:
-                                  SvgPicture.asset('assets/icons/Vector.svg'),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            foundation.foundationName,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
-                        SizedBox(
-                          width: 18,
-                        ),
-                      ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            foundation.foundationDescription,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                          ),
+                        ],
+                      ),
                     ),
-                  )
-                ],
-              ),
-            ),
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          Material(
-            elevation: 1,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xffF4F4F6),
-                //border: Border.all(color: Colors.blue, width: 2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(10)),
-                    child: Image.asset('assets/images/Frame1.png',
-                        fit: BoxFit.cover),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      //  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Romaan Raees Foundation',
-                                style: TextStyle(
-                                    fontSize: 20, fontWeight: FontWeight.bold)),
-                            CircleAvatar(
-                              radius: 17,
-                              backgroundColor: Color(0xffE9E9E9),
-                              child:
-                                  SvgPicture.asset('assets/icons/Vector.svg'),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          width: 18,
-                        ),
-                      ],
+                    const SizedBox(width: 8),
+                    CircleAvatar(
+                      radius: 17,
+                      backgroundColor: const Color(0xffE9E9E9),
+                      child: SvgPicture.asset('assets/icons/Vector.svg'),
                     ),
-                  )
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class DonationDetailScreen extends StatelessWidget {
+class DonationDetailScreen extends StatefulWidget {
+  final Foundation foundation;
+
+  const DonationDetailScreen({Key? key, required this.foundation}) : super(key: key);
+
+  @override
+  State<DonationDetailScreen> createState() => _DonationDetailScreenState();
+}
+
+class _DonationDetailScreenState extends State<DonationDetailScreen> {
+  final int requiredPoints = 30; // Points required for donation
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final profileProvider = Provider.of<ProfileProvider>(context);
 
+    String imageUrl = widget.foundation.image;
+    // Check if the image URL is a relative path and prepend the API base URL if needed
+    if (imageUrl.startsWith('images/')) {
+      // Assuming your API base URL is configured in ApiClient
+      imageUrl = '${AppConfig.imageBaseUrl}${widget.foundation.image}';
+    }
+
+    return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage("assets/images/LuckyDraw.png"),
-            // Ensure the correct path
             fit: BoxFit.cover,
           ),
         ),
         child: Column(
           children: [
             const SizedBox(height: 50),
+            // Header
             Padding(
-              padding: const EdgeInsets.only(left: 16.0,right: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -265,27 +303,31 @@ class DonationDetailScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                     elevation: 2,
                     child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: SvgPicture.asset("assets/icons/Back.svg")),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        icon: SvgPicture.asset("assets/icons/Back.svg"),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
                   ),
-                  Text(
+                  const Text(
                     'Donation',
-                    style: TextStyle(fontSize:20,fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Container(
-                    //margin: EdgeInsets.only(right: 16),
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,  // Start color at the top
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          const Color(0xFF00C853), // Default green
-                          const Color(0xFF00B0FF), // Default blue
+                          Color(0xFF00C853), // Green
+                          Color(0xFF00B0FF), // Blue
                         ],
                       ),
                       borderRadius: BorderRadius.circular(10),
@@ -293,14 +335,21 @@ class DonationDetailScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         SvgPicture.asset('assets/icons/Group2.svg'),
-                        SizedBox(width: 4),
-                        Text('160', style: TextStyle(fontWeight:FontWeight.bold,color: Colors.white)),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${profileProvider.userProfile?.tokens ?? 0}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
+            // Foundation details
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Material(
@@ -309,237 +358,152 @@ class DonationDetailScreen extends StatelessWidget {
                 child: Container(
                   height: MediaQuery.of(context).size.height * 0.67,
                   decoration: BoxDecoration(
-                    color: Color(0xffF4F4F6),
-                    //border: Border.all(color: Colors.blue, width: 2),
+                    color: const Color(0xffF4F4F6),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Column(
                     children: [
-                      Image.asset('assets/images/Frame2.png', fit: BoxFit.cover),
-                      SizedBox(height: 15),
-                      Text('Romaan Raees Foundation',
-                          style:
-                              TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                      Text('Details about Romaan Raees Foundation',
-                          style: TextStyle(fontSize: 13, color: Colors.grey[900])),
-                      SizedBox(
-                        height: 25,
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          height: 220,
+                          width: double.infinity,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to asset image if network image fails
+                            return Image.asset(
+                              'assets/images/Frame2.png',
+                              fit: BoxFit.cover,
+                              height: 220,
+                              width: double.infinity,
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Text(
+                        widget.foundation.foundationName,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(left: 50, right: 50.0),
-                        child: Container(
-                            width: double.infinity,
-                            height: 45,
-                            //margin: EdgeInsets.only(right: 16),
-                            padding:
-                                EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              /* gradient: LinearGradient(
-                                colors: [
-                                  const Color(0xFF00C853), // Default green
-                                  const Color(0xFF00B0FF), // Default blue
-                                ],
-                              ),*/
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                // Add border here
-                                color: Colors.green,
-                                // Change this to any color you prefer
-                                width: 2, // Border width
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.watch_later_outlined),SizedBox(width: 15,),
-                                Center(
-                                    child: Text(
-                                  'Added on 10/03/24',
-                                  style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 16),
-                                ))
-                              ],
-                            )),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          widget.foundation.foundationDescription,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: Colors.grey[900]),
+                        ),
                       ),
-                      SizedBox(
-                        height: 25,
-                      ),
+                      const SizedBox(height: 25),
                       Padding(
-                        padding: const EdgeInsets.only(right: 5.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 50),
                         child: Container(
-                          width: 85,
-                          margin: EdgeInsets.only(right: 16),
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          width: double.infinity,
+                          height: 45,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,  // Start color at the top
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                const Color(0xFF00C853), // Default green
-                                const Color(0xFF00B0FF), // Default blue
-                              ],
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.green,
+                              width: 2,
                             ),
-                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
                             children: [
-                              SvgPicture.asset('assets/icons/Group2.svg'),
-                              SizedBox(width: 4),
-                              Text('160',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white)),
+                              const Icon(Icons.watch_later_outlined),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Text(
+                                  'Added on ${_formatDate(widget.foundation.createdAt)}',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ),
-                      SizedBox(
-                        height: 15,
+                      const SizedBox(height: 25),
+                      Container(
+                        width: 85,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xFF00C853), // Green
+                              Color(0xFF00B0FF), // Blue
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            SvgPicture.asset('assets/icons/Group2.svg'),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$requiredPoints',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      Text('Points Required'),
-                      SizedBox(
-                        height: 25,
-                      ),
+                      const SizedBox(height: 15),
+                      const Text('Points Required'),
+                      const SizedBox(height: 25),
+                      // Donate button
                       GestureDetector(
-                        onTap: (){
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return Dialog(
-                                backgroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 16.0,right: 16.0),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // Close Button
-                                      Align(
-                                        alignment: Alignment.topRight,
-                                        child: IconButton(
-                                          icon: Image.asset('assets/images/image120.png',width: 30,height: 30,),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                      ),
-
-                                      // Title
-                                      Text(
-                                        "Making Donation",
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-
-                                      SizedBox(height: 15),
-
-                                      // Name Input
-                                      Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          "Name (on behalf of)",
-                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                      SizedBox(height: 5),
-                                      TextField(
-                                        decoration: InputDecoration(
-                                          hintText: "Name here",
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                        ),
-                                      ),
-
-                                      SizedBox(height: 15),
-
-                                      // Message Input
-                                      Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          "Type Your Message",
-                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                      SizedBox(height: 5),
-                                      TextField(
-                                        maxLines: 3,
-                                        decoration: InputDecoration(
-                                          hintText: "Type Your Message",
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                        ),
-                                      ),
-
-                                      SizedBox(height: 15),
-
-                                      // Donation Amount
-                                      Container(
-                                        width: double.infinity,
-                                        padding: EdgeInsets.symmetric(vertical: 10),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.grey),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                             SvgPicture.asset('assets/icons/Group2.svg'),
-                                            SizedBox(width: 5),
-                                            Text(
-                                              "30",
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      SizedBox(height: 15),
-
-                                      // Donate Button
-                                      CustomButton(text: 'Donate', onPressed: (){}),
-                                      SizedBox(height: 20),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
+                        onTap: () {
+                          // Check if user has enough points
+                          final userPoints = profileProvider.userProfile?.tokens ?? 0;
+                          if (userPoints < requiredPoints) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Not enough points to make a donation'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          _showDonationDialog(context, widget.foundation.id);
                         },
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 20, right: 20.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Container(
-                              width: double.infinity,
-                              height: 45,
-                              //margin: EdgeInsets.only(right: 16),
-                              padding:
-                                  EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    const Color(0xFF00C853), // Default green
-                                    const Color(0xFF00B0FF), // Default blue
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(20),
+                            width: double.infinity,
+                            height: 45,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF00C853), // Green
+                                  Color(0xFF00B0FF), // Blue
+                                ],
                               ),
-                              child: Center(
-                                  child: Text(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Center(
+                              child: Text(
                                 'Donate',
                                 style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20),
-                              ))),
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -552,9 +516,192 @@ class DonationDetailScreen extends StatelessWidget {
       ),
     );
   }
+
+  // Format date string
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (e) {
+      return dateString.split('T')[0]; // Fallback format
+    }
+  }
+
+  // Show donation dialog
+  void _showDonationDialog(BuildContext context, int foundationId) {
+    final donationProvider = Provider.of<DonationProvider>(context, listen: false);
+    final nameController = TextEditingController();
+    final messageController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Close Button
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: IconButton(
+                        icon: Image.asset(
+                          'assets/images/image120.png',
+                          width: 30,
+                          height: 30,
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+
+                    // Title
+                    const Text(
+                      "Making Donation",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Error message
+                    if (donationProvider.errorMessage.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          donationProvider.errorMessage,
+                          style: TextStyle(color: Colors.red.shade800),
+                        ),
+                      ),
+
+                    // Name Input
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Name (on behalf of)",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        hintText: "Name here",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Message Input
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Type Your Message",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    TextField(
+                      controller: messageController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: "Type Your Message",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Donation Amount
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SvgPicture.asset('assets/icons/Group2.svg'),
+                          const SizedBox(width: 5),
+                          Text(
+                            "$requiredPoints",
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Donate Button
+                    CustomButton(
+                      text: donationProvider.isDonating ? 'Processing...' : 'Donate',
+                      isLoading: donationProvider.isDonating,
+                      onPressed: donationProvider.isDonating
+                          ? (){}
+                          : () async {
+                        if (nameController.text.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter your name'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        final success = await donationProvider.makeDonation(
+                          foundationId: foundationId,
+                          amount: requiredPoints,
+                          name: nameController.text,
+                          message: messageController.text,
+                        );
+
+                        if (success) {
+                          // Close dialog
+                          Navigator.of(context).pop();
+
+                          // Show success message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(donationProvider.successMessage),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }
-
-
-
-
-

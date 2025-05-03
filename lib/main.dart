@@ -1,9 +1,12 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:primax/core/providers/lucky_draw_provider.dart';
 import 'package:primax/services/connectivity_service.dart';
 import 'package:provider/provider.dart';
 import 'core/di/service_locator.dart';
 import 'core/providers/auth_provider.dart';
+import 'core/providers/donation_provider.dart';
+import 'core/providers/network_status_provider.dart';
 import 'core/providers/points_provider.dart';
 import 'core/providers/profile_provider.dart';
 import 'core/providers/rewards_provider.dart';
@@ -26,8 +29,15 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         // Core services
-        ChangeNotifierProvider<ConnectivityService>(
+        ChangeNotifierProvider(
           create: (_) => locator<ConnectivityService>(),
+        ),
+
+        // NetworkStatusProvider - add this provider
+        ChangeNotifierProvider(
+          create: (context) => NetworkStatusProvider(
+            Provider.of<ConnectivityService>(context, listen: false),
+          ),
         ),
 
         // Auth provider needs to be first as others depend on it
@@ -44,12 +54,22 @@ class MyApp extends StatelessWidget {
           create: (_) => RewardsProvider(),
           update: (_, profile, rewardsProvider) => rewardsProvider!,
         ),
+        // ChangeNotifierProxyProvider<ProfileProvider, LuckyDrawProvider>(
+        //   create: (_) => LuckyDrawProvider(),
+        //   update: (_, profile, luckDrawProvider) => luckDrawProvider!,
+        // ),
         ChangeNotifierProxyProvider<ProfileProvider, ScanProvider>(
           create: (_) => ScanProvider(),
           update: (_, profile, scanProvider) => scanProvider!,
         ),
         ChangeNotifierProvider<PointsProvider>(
           create: (_) => PointsProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => locator<DonationProvider>(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => locator<LuckyDrawProvider>(),
         ),
       ],
       child: Consumer<AuthProvider>(

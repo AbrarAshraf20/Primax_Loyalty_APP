@@ -1,4 +1,6 @@
 // lib/services/rewards_service.dart
+import 'dart:convert';
+
 import '../core/network/api_client.dart';
 import '../core/network/api_exception.dart';
 import '../core/di/service_locator.dart';
@@ -67,8 +69,7 @@ class RewardsService {
           'id': rewardId.toString(),
         },
       );
-
-      return response.isSuccess;
+      return response.data["success"];
     } on ApiException {
       rethrow;
     }

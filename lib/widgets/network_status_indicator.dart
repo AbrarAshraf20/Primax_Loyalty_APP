@@ -15,6 +15,7 @@ class NetworkStatusIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Make sure the NetworkStatusProvider is available
     return Consumer<NetworkStatusProvider>(
       builder: (context, networkStatus, _) {
         if (networkStatus.isConnected) {

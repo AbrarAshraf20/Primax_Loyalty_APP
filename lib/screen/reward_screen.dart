@@ -1,7 +1,9 @@
 // lib/screen/reward_screen.dart
 import 'package:flutter/material.dart';
+import 'package:nb_utils/nb_utils.dart';
 import 'package:primax/core/providers/rewards_provider.dart';
 import 'package:provider/provider.dart';
+
 import '../core/providers/profile_provider.dart';
 import '../core/utils/app_config.dart';
 import '../models/reward_model.dart';
@@ -14,7 +16,8 @@ class RewardScreen extends StatefulWidget {
   _RewardScreenState createState() => _RewardScreenState();
 }
 
-class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderStateMixin {
+class _RewardScreenState extends State<RewardScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -36,7 +39,8 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
 
   Future<void> _loadData() async {
     // Load all rewards data at once
-    await Provider.of<RewardsProvider>(context, listen: false).loadAllRewardsData();
+    await Provider.of<RewardsProvider>(context, listen: false)
+        .loadAllRewardsData();
   }
 
   @override
@@ -56,7 +60,8 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
 
               // Tab bar
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TabBar(
                   controller: _tabController,
                   indicatorColor: Colors.green,
@@ -124,7 +129,8 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
             builder: (_, profileProvider, __) {
               final user = profileProvider.userProfile;
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.topCenter,
@@ -138,10 +144,11 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.workspace_premium, color: Colors.white, size: 16),
+                    const Icon(Icons.workspace_premium,
+                        color: Colors.white, size: 16),
                     const SizedBox(width: 4),
-                    Text('1',
-                      // '${user?.points ?? 0}',
+                    Text(
+                      '1', // '${user?.points ?? 0}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -260,24 +267,25 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
           children: [
             // Image section
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(10)),
               child: reward.image != null
                   ? Image.network(
-                "${AppConfig.imageBaseUrl}${reward.image}",
-                height: 180,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (ctx, error, _) => Container(
-                  height: 180,
-                  color: Colors.grey[300],
-                  child: const Center(child: Icon(Icons.error)),
-                ),
-              )
+                      "${AppConfig.imageBaseUrl}${reward.image}",
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, error, _) => Container(
+                        height: 180,
+                        color: Colors.grey[300],
+                        child: const Center(child: Icon(Icons.error)),
+                      ),
+                    )
                   : Container(
-                height: 180,
-                color: Colors.grey[300],
-                child: const Center(child: Icon(Icons.image)),
-              ),
+                      height: 180,
+                      color: Colors.grey[300],
+                      child: const Center(child: Icon(Icons.image)),
+                    ),
             ),
 
             // Content section
@@ -316,12 +324,15 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
                   Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
-                              Color(0xFF00C853), // Green
-                              Color(0xFF00B0FF), // Blue
+                              Color(0xFF00C853),
+                              // Green
+                              Color(0xFF00B0FF),
+                              // Blue
                             ],
                           ),
                           borderRadius: BorderRadius.circular(8),
@@ -356,10 +367,12 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
   }
 
   void _showRewardDetails(Reward reward) {
-    final rewardsProvider = Provider.of<RewardsProvider>(context, listen: false);
-    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
-    // final userPoints = profileProvider.userProfile?.points ?? 0;
-    // final hasEnoughPoints = userPoints >= reward.pointsRequired;
+    final rewardsProvider =
+        Provider.of<RewardsProvider>(context, listen: false);
+    final profileProvider =
+        Provider.of<ProfileProvider>(context, listen: false);
+    final userPoints = profileProvider.userProfile?.tokens ?? 0;
+    final hasEnoughPoints = userPoints >= int.parse(reward.priceInTokens);
 
     showModalBottomSheet(
       context: context,
@@ -391,7 +404,7 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
-                          '${AppConfig.imageBaseUrl}images/claimables/Islamic Pilgrimage Elegant Hajj Kaaba Picture PNG Images _ PNG Free Download - Pikbest.jpg',
+                          '${AppConfig.imageBaseUrl}${reward.image}',
                           height: 180,
                           width: double.infinity,
                           fit: BoxFit.cover,
@@ -444,12 +457,15 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
                   // Points required
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [
-                            Color(0xFF00C853), // Green
-                            Color(0xFF00B0FF), // Blue
+                            Color(0xFF00C853),
+                            // Green
+                            Color(0xFF00B0FF),
+                            // Blue
                           ],
                         ),
                         borderRadius: BorderRadius.circular(30),
@@ -470,7 +486,7 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
                   // Your points
                   Center(
                     child: Text(
-                      'Your points: "userPoints"',
+                      'Your points: $userPoints',
                       style: TextStyle(
                         fontSize: 16,
                         color: true ? Colors.green : Colors.red,
@@ -504,19 +520,28 @@ class _RewardScreenState extends State<RewardScreen> with SingleTickerProviderSt
 
                   // Redeem button
                   CustomButton(
-                    text: rewardsProvider.isLoading ? 'Processing...' : 'Redeem Now',
-                    width: double.infinity,
-                    isLoading: rewardsProvider.isLoading,
-                    onPressed:()=> true
-                        ? () async {
-                      final success = await rewardsProvider.redeemReward(reward.id);
-                      if (success) {
-                        Navigator.pop(context);
-                        _showSuccessDialog(reward);
-                      }
-                    }
-                        : null,
-                  ),
+                      text: rewardsProvider.isLoading
+                          ? 'Processing...'
+                          : 'Redeem Now',
+                      width: double.infinity,
+                      isLoading: rewardsProvider.isLoading,
+                      onPressed:  () async {
+                              if(hasEnoughPoints) {
+                                final success = await rewardsProvider
+                                    .redeemReward(reward.id);
+                                if (success) {
+                                  Navigator.pop(context);
+                                  _showSuccessDialog(reward);
+                                } else {
+                                  snackBar(context,title: "You haven't enough point to reward");
+
+                                }
+                              }else{
+                                snackBar(context,title: "You haven't enough point to reward");
+
+                              }
+
+                      }),
 
                   const SizedBox(height: 20),
                 ],
