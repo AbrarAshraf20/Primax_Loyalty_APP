@@ -2,10 +2,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:primax/core/utils/app_config.dart';
+import 'package:primax/screen/login_screen/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:primax/core/providers/profile_provider.dart';
 import 'package:primax/core/providers/auth_provider.dart';
 import 'package:primax/routes/routes.dart';
+
+import '../general_screens/web_view_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
   @override
@@ -34,8 +38,8 @@ class CustomDrawer extends StatelessWidget {
                       : CircleAvatar(
                     radius: 50,
                     backgroundImage: userProfile?.image != null
-                        ? NetworkImage(userProfile!.image!)
-                        : AssetImage('assets/images/Nola_Risk.png') as ImageProvider,
+                        ? NetworkImage("${AppConfig.imageBaseUrl}${userProfile!.image!}")
+                        : AssetImage('assets/images/user_profile.png') as ImageProvider,
                   ),
                 ),
                 accountName: Padding(
@@ -70,7 +74,7 @@ class CustomDrawer extends StatelessWidget {
               ),
               DrawerItem(
                 icon: SvgPicture.asset("assets/icons/Group_5.svg"),
-                text: "Account Ledger",
+                text: "Claimed Point History",
                 onTap: () {
                   Navigator.pop(context);
                   // Navigator.pushNamed(context, Routes.accountLedger);
@@ -82,6 +86,11 @@ class CustomDrawer extends StatelessWidget {
                 text: "Terms and Conditions",
                 onTap: () {
                   Navigator.pop(context);
+                  WebViewScreen(
+                    url: '${AppConfig.imageBaseUrl}terms-and-conditions',
+                    title: 'Terms and Conditions',
+                  ).launch(context,
+                      pageRouteAnimation: PageRouteAnimation.Slide);
                   // Navigator.pushNamed(context, Routes.termsAndConditions);
                 },
               ),
@@ -90,6 +99,13 @@ class CustomDrawer extends StatelessWidget {
                 text: "Privacy Policy",
                 onTap: () {
                   Navigator.pop(context);
+
+                  WebViewScreen(
+                    url: '${AppConfig.imageBaseUrl}privacy-policy',
+                    title: 'Terms and Conditions',
+                  ).launch(context,
+                      pageRouteAnimation: PageRouteAnimation.Slide);
+
                   // Navigator.pushNamed(context, Routes.privacyPolicy);
                 },
               ),
@@ -98,6 +114,13 @@ class CustomDrawer extends StatelessWidget {
                 text: "Contact Support",
                 onTap: () {
                   Navigator.pop(context);
+
+                  WebViewScreen(
+                    url: '${AppConfig.imageBaseUrl}contact',
+                    title: 'Terms and Conditions',
+                  ).launch(context,
+                      pageRouteAnimation: PageRouteAnimation.Slide);
+
                   // Navigator.pushNamed(context, Routes.contactSupport);
                 },
               ),
@@ -107,8 +130,14 @@ class CustomDrawer extends StatelessWidget {
                 text: "Sign Out",
                 color: Colors.red,
                 onTap: () {
-                  Navigator.pop(context); // Close drawer first
-                  _showSignOutConfirmationDialog(context);
+                  // Get auth provider BEFORE closing the drawer
+                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  
+                  // Close drawer first
+                  Navigator.pop(context);
+                  
+                  // Show confirmation dialog
+                  _showSimpleLogoutDialog(context, authProvider);
                 },
               ),
             ],
@@ -117,12 +146,15 @@ class CustomDrawer extends StatelessWidget {
       },
     );
   }
-
-  // Show confirmation dialog before signing out
-  void _showSignOutConfirmationDialog(BuildContext context) {
+  
+  // Simple confirmation dialog with pre-captured authProvider
+  void _showSimpleLogoutDialog(BuildContext context, AuthProvider authProvider) {
+    // Store navigator before showing dialog to ensure it's valid
+    final navigator = Navigator.of(context);
+    
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) { // Use a new dialogContext
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text('Sign Out'),
           content: Text('Are you sure you want to sign out?'),
@@ -133,12 +165,22 @@ class CustomDrawer extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                // Close the dialog first
+                // Close dialog first
                 Navigator.pop(dialogContext);
-
-                // Get auth provider and sign out
-                // Use a BuildContext that is guaranteed to be active
-                _performSignOut(context);
+                
+                // Start logout process in the background
+                authProvider.logout().then((success) {
+                  print("Logout ${success ? 'successful' : 'failed'}");
+                }).catchError((error) {
+                  print("Error during logout: $error");
+                });
+                
+                // Use the stored navigator reference to navigate
+                // Push a material page route directly to avoid any extension methods
+                navigator.pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => LoginScreen()),
+                  (route) => false
+                );
               },
               child: Text('Sign Out', style: TextStyle(color: Colors.red)),
             ),
@@ -146,29 +188,6 @@ class CustomDrawer extends StatelessWidget {
         );
       },
     );
-  }
-
-  // Perform sign out in a separate method to avoid context issues
-  void _performSignOut(BuildContext context) {
-    // Store the navigator state before any async operations
-    final navigator = Navigator.of(context);
-
-    // Perform sign out
-    Provider.of<AuthProvider>(context, listen: false).logout().then((_) {
-      // Use the stored navigator to navigate
-      navigator.pushNamedAndRemoveUntil(
-          Routes.login,
-              (route) => false
-      );
-    }).catchError((error) {
-      // Handle any errors here
-      print('Error signing out: $error');
-
-      // Show error message if needed
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to sign out. Please try again.'))
-      );
-    });
   }
 }
 
