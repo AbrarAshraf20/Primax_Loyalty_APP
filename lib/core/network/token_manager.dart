@@ -33,7 +33,7 @@ class TokenManager {
     return prefs.getString(_refreshTokenKey);
   }
 
-  // Save user data (for caching user profile)
+  // Save user data (for caching user drawer)
   static Future<void> saveUserData(String userData) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userDataKey, userData);
@@ -130,4 +130,5 @@ class TokenManager {
     await prefs.remove(_userDataKey);
     await prefs.setBool(_rememberMeKey, false);
   }
+
 }

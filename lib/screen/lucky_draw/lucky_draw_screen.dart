@@ -100,7 +100,10 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back_ios, size: 16),
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                          // Don't try to pop, just go back to home in parent Navigator
+                          // The WillPopScope in dashboard will handle it
+                        },
                       ),
                     ),
                   ),

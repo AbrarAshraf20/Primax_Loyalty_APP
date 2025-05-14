@@ -70,7 +70,7 @@ class DonationProvider extends ChangeNotifier {
       if (result['success'] == true) {
         _successMessage = result['message'] ?? 'Donation successful';
 
-        // Update profile points if available
+        // Update drawer points if available
         await _profileProvider.getProfileDetails();
 
         _setDonating(false);

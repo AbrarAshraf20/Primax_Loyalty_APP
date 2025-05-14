@@ -2,6 +2,8 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:primax/models/address_model.dart';
+
 import '../core/network/api_client.dart';
 import '../core/network/api_exception.dart';
 import '../core/network/token_manager.dart';
@@ -11,7 +13,7 @@ import '../models/user_model.dart';
 class ProfileService {
   final ApiClient _apiClient = locator<ApiClient>();
 
-  // Get user profile details
+  // Get user drawer details
   Future<User> getProfileDetails() async {
     try {
       final response = await _apiClient.get('/profile-details');
@@ -39,7 +41,30 @@ class ProfileService {
     }
   }
 
-  // Update profile image
+  // Get user addresses
+  Future<List<Address>> getAddresses() async {
+    try {
+      final response = await _apiClient.get('/get-address');
+      print('📡 API Response: ${response.data}'); // Debug print full response
+
+      if (response.data != null) {
+        // Use the new unified parseAddresses method that handles all response formats
+        final addresses = Address.parseAddresses(response.data);
+        print('📌 Parsed ${addresses.length} addresses: $addresses'); // Debug print
+        return addresses;
+      } else {
+        throw ApiException(message: 'Invalid response from server');
+      }
+    } on ApiException catch (e) {
+      print('❌ API Exception in getAddresses: ${e.message}'); // Debug print
+      rethrow;
+    } catch (e) {
+      print('❌ Unexpected error in getAddresses: $e'); // Debug print
+      throw ApiException(message: 'Error processing address data: $e');
+    }
+  }
+
+  // Update drawer image
   Future<User> updateProfileImage(File image) async {
     try {
       final response = await _apiClient.postFormData(
@@ -66,7 +91,7 @@ class ProfileService {
     }
   }
 
-  // Update profile details
+  // Update drawer details
   Future<User> updateProfile({
     required String name,
     required String email,
@@ -111,66 +136,101 @@ class ProfileService {
     }
   }
 
-// // Add or update address
-// Future<Address> addUpdateAddress({
-//   required String address,
-//   String? street,
-//   String? postcode,
-//   String? apartment,
-//   required String label,
-// }) async {
-//   try {
-//     final fields = {
-//       'address': address,
-//       'label': label,
-//     };
-//
-//     if (street != null) fields['street'] = street;
-//     if (postcode != null) fields['postcode'] = postcode;
-//     if (apartment != null) fields['apartment'] = apartment;
-//
-//     final response = await _apiClient.postFormData(
-//       '/address',
-//       fields: fields,
-//     );
-//
-//     if (response.data != null) {
-//       final addressData = response.data['address'] ?? response.data;
-//
-//       // Create and return address
-//       final newAddress = Address.fromJson(addressData);
-//
-//       // Update cached user data with new address
-//       final cachedUserData = await TokenManager.getUserData();
-//       if (cachedUserData != null) {
-//         final userData = jsonDecode(cachedUserData);
-//
-//         // Add or update the address in the list
-//         List<dynamic> addresses = userData['addresses'] ?? [];
-//         bool found = false;
-//
-//         for (int i = 0; i < addresses.length; i++) {
-//           if (addresses[i]['id'] == newAddress.id) {
-//             addresses[i] = newAddress.toJson();
-//             found = true;
-//             break;
-//           }
-//         }
-//
-//         if (!found) {
-//           addresses.add(newAddress.toJson());
-//         }
-//
-//         userData['addresses'] = addresses;
-//         await TokenManager.saveUserData(jsonEncode(userData));
-//       }
-//
-//       return newAddress;
-//     } else {
-//       throw ApiException(message: 'Invalid response from server');
-//     }
-//   } on ApiException {
-//     rethrow;
-//   }
-// }
+  // Add a new address
+  Future<Address> addAddress({
+    required String street,
+    required String address,
+    required String postalCode,
+    required String label,
+    required String apartment,
+    String? latitude,
+    String? longitude,
+  }) async {
+    try {
+      final fields = {
+        'street': street,
+        'address': address,
+        'postcode': postalCode,
+        'apartment': apartment,
+        'label': label,
+        // Include location coordinates if available
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+      };
+
+      final response = await _apiClient.post(
+        '/address',
+        body: fields,
+      );
+
+      if (response.data != null) {
+        // Use new parseAddresses method to handle different response formats
+        final addresses = Address.parseAddresses(response.data);
+        if (addresses.isNotEmpty) {
+          return addresses.first;
+        } else {
+          throw ApiException(message: 'Invalid address data in response');
+        }
+      } else {
+        throw ApiException(message: 'Invalid response from server');
+      }
+    } on ApiException {
+      rethrow;
+    }
+  }
+
+  // Update an existing address
+  Future<Address> updateAddress({
+    required int addressId,
+    required String street,
+    required String address,
+    required String postalCode,
+    required String label,
+    required String apartment,
+    String? latitude,
+    String? longitude,
+  }) async {
+    try {
+      final fields = {
+        'id': addressId.toString(),
+        'street': street,
+        'address': address,
+        'postcode': postalCode,
+        'apartment': apartment,
+        'label': label,
+        // Include location coordinates if available
+        if (latitude != null) 'latitude': latitude,
+        if (longitude != null) 'longitude': longitude,
+      };
+
+      final response = await _apiClient.put(
+        '/address/$addressId',
+        body: fields,
+      );
+
+      if (response.data != null) {
+        // Use new parseAddresses method to handle different response formats
+        final addresses = Address.parseAddresses(response.data);
+        if (addresses.isNotEmpty) {
+          return addresses.first;
+        } else {
+          throw ApiException(message: 'Invalid address data in response');
+        }
+      } else {
+        throw ApiException(message: 'Invalid response from server');
+      }
+    } on ApiException {
+      rethrow;
+    }
+  }
+
+  // Delete an address
+  Future<bool> deleteAddress(int addressId) async {
+    try {
+      final response = await _apiClient.delete('/address/$addressId');
+      return response.isSuccess;
+    } on ApiException {
+      rethrow;
+    }
+  }
 }

@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:primax/screen/primax_products/comman_back_button.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter/services.dart';
 
-import '../../widgets/comman_back_button.dart';
-
-class AboutUsScreen extends StatefulWidget {
+class WebViewScreen extends StatefulWidget {
   final String url;
   final String title;
 
-  const AboutUsScreen({
+  const WebViewScreen({
     Key? key,
     required this.url,
     this.title = 'About Us',
   }) : super(key: key);
 
   @override
-  _AboutUsScreenState createState() => _AboutUsScreenState();
+  _WebViewScreenState createState() => _WebViewScreenState();
 }
 
-class _AboutUsScreenState extends State<AboutUsScreen> {
-  late WebViewController _webViewController;
+class _WebViewScreenState extends State<WebViewScreen> {
+  late final WebViewController _webViewController;
   bool _isLoading = true;
   bool _hasError = false;
   String _errorMessage = '';
@@ -35,10 +34,11 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
   @override
   void initState() {
     super.initState();
-    _initWebViewController();
+    _initWebView();
   }
 
-  void _initWebViewController() {
+  void _initWebView() {
+    // Initialize WebViewController
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.white)
@@ -64,7 +64,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
             setState(() {
               _isLoading = false;
               _hasError = true;
-              _errorMessage = '${error.description}';
+              _errorMessage = error.description ?? 'Unknown error occurred';
             });
           },
           onNavigationRequest: (NavigationRequest request) {
@@ -77,7 +77,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
 
   Future<bool> _onWillPop() async {
     if (await _webViewController.canGoBack()) {
-      _webViewController.goBack();
+      await _webViewController.goBack();
       return false;
     }
     return true;
@@ -91,23 +91,25 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           leading: CommonBackButton(onPressed: ()=>Navigator.pop(context)),
-          title: Text(widget.title,style: TextStyle(fontWeight: FontWeight.w600,fontSize: 16),),
+          title: Text(
+            widget.title,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: Colors.black,
+            ),
+          ),
           centerTitle: true,
-          // backgroundColor: primaryColor,
-          iconTheme: IconThemeData(color: onPrimaryColor),
+          backgroundColor: Colors.white,
           elevation: 0,
           actions: [
             IconButton(
-              icon: Icon(Icons.refresh,color: Colors.black,),
+              icon: Icon(Icons.refresh, color: Colors.black),
               onPressed: () {
                 _webViewController.reload();
               },
             ),
           ],
-          // systemOverlayStyle: SystemUiOverlayStyle(
-          //   statusBarColor: Colors.white,
-          //   statusBarIconBrightness: Brightness.light,
-          // ),
         ),
         body: Stack(
           children: [
@@ -122,7 +124,6 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Animated Logo or App Icon (optional)
                       Container(
                         width: 100,
                         height: 100,

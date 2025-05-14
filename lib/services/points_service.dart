@@ -12,8 +12,8 @@ class PointsService {
     try {
       final response = await _apiClient.get('/claimed_points');
 
-      if (response.data != null && response.data['transactions'] != null) {
-        final transactionsData = response.data['transactions'] as List;
+      if (response.data != null && response.data['success'] == true && response.data['data'] != null) {
+        final transactionsData = response.data['data'] as List;
 
         return transactionsData
             .map((transactionJson) => PointTransaction.fromJson(transactionJson))
@@ -25,7 +25,6 @@ class PointsService {
       rethrow;
     }
   }
-
   // Get user's total points
   Future<int> getTotalPoints() async {
     try {

@@ -2,36 +2,35 @@
 
 class PointTransaction {
   final int id;
-  final int userId;
+  final String userId;
+  final String itemName;
   final int points;
-  final String type; // 'earned', 'redeemed', etc.
-  final String? description;
-  final String? rewardTitle;
-  final String? barcode;
+  final String serialNumber;
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   PointTransaction({
     required this.id,
     required this.userId,
+    required this.itemName,
     required this.points,
-    required this.type,
-    this.description,
-    this.rewardTitle,
-    this.barcode,
+    required this.serialNumber,
     required this.createdAt,
+    required this.updatedAt,
   });
 
   factory PointTransaction.fromJson(Map<String, dynamic> json) {
     return PointTransaction(
       id: json['id'],
-      userId: json['user_id'],
-      points: json['points'] ?? 0,
-      type: json['type'] ?? 'earned',
-      description: json['description'],
-      rewardTitle: json['reward_title'],
-      barcode: json['barcode'],
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      userId: json['user_id'].toString(),
+      itemName: json['item_name'] ?? '',
+      points: int.tryParse(json['points'].toString()) ?? 0,
+      serialNumber: json['serial_number'] ?? '',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : DateTime.now(),
     );
   }
@@ -40,12 +39,11 @@ class PointTransaction {
     return {
       'id': id,
       'user_id': userId,
-      'points': points,
-      'type': type,
-      'description': description,
-      'reward_title': rewardTitle,
-      'barcode': barcode,
+      'item_name': itemName,
+      'points': points.toString(),
+      'serial_number': serialNumber,
       'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
   }
 }

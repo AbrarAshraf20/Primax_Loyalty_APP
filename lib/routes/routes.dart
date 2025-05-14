@@ -1,14 +1,17 @@
 // lib/routes/routes.dart
 import 'package:flutter/material.dart';
+import 'package:primax/screen/calaim_point_screen/claim_points_screen.dart';
+import 'package:primax/screen/create_account_screen/create_account_screen.dart';
+import 'package:primax/screen/platform_screen/platform_screen.dart';
 import 'package:primax/screen/lucky_draw/lucky_draw_detail_screen.dart';
 import 'package:primax/screen/lucky_draw/lucky_draw_screen.dart';
 import 'package:primax/screen/scan/veryfiyserial.dart';
 
 // Import screens
+import '../screen/login_screen/enter_otp.dart';
 import '../screen/splash_screen/splash_screen.dart';
 import '../screen/login_screen/login_screen.dart';
-import '../screen/login_screen/enter_otp.dart';
-import '../screen/profile/user_profilescreen.dart';
+import '../screen/profile_screen/user_profilescreen.dart';
 import '../screen/scan/scan_screen.dart';
 import '../screen/reward_screen.dart';
 import '../screen/luckdraw_screen.dart';
@@ -26,10 +29,11 @@ class Routes {
   static const String splash = '/';
   static const String login = '/login';
   static const String register = '/register';
+  static const String platform = '/platform';
   static const String otp = '/otp';
   static const String home = '/home';
   static const String dashboard = '/dashboard';
-  static const String profile = '/profile';
+  static const String profile = '/drawer';
   static const String scan = '/scan';
   static const String verifySerial = '/verify-serial';
   static const String rewards = '/rewards';
@@ -45,7 +49,7 @@ class Routes {
   static final Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
     login: (context) => const LoginScreen(),
-    otp: (context) => OtpScreen(),
+    otp: (context) => OtpScreen(email: '',),
     home: (context) => HomeScreen1(),
     dashboard: (context) => DashboardScreen(),
     profile: (context) => UserProfileScreen(),
@@ -55,7 +59,8 @@ class Routes {
     luckyDraw: (context) => LuckyDrawScreen(),
     luckyDrawDetails: (context) => LuckyDrawDetailScreen(),
     donation: (context) => DonationScreen(),
-    // pointsHistory: (context) =>  PointsHistoryScreen(),
+    platform: (context) => PlatformScreen(),
+    pointsHistory: (context) =>  ClaimedPointsScreen(),
     forgotPassword: (context) => const ForgotPassword(),
     resetPassword: (context) => const ResetPassword(),
     setPassword: (context) => const SetPassword(),
@@ -82,6 +87,40 @@ class Routes {
   static void navigateAfterLogout(BuildContext context) {
     navigateAndClearStack(context, login);
   }
+  // static Route<dynamic> generateRoute(RouteSettings settings) {
+  //   switch (settings.name) {
+  //     case splash:
+  //       return MaterialPageRoute(builder: (_) => SplashScreen());
+  //
+  //     case login:
+  //       return MaterialPageRoute(builder: (_) => LoginScreen());
+  //
+  //     case register:
+  //     // Handle route arguments for CreateAccountScreen
+  //       return MaterialPageRoute(
+  //         settings: settings, // Important: Pass the settings to access arguments
+  //         builder: (context) => CreateAccountScreen.fromRouteArguments(context),
+  //       );
+  //
+  //     case otp:
+  //     // Handle route arguments for OtpScreen
+  //       final args = settings.arguments as Map<String, dynamic>?;
+  //       final email = args?['email'] as String? ?? '';
+  //       return MaterialPageRoute(builder: (_) => OtpScreen(email: email));
+  //
+  //     case dashboard:
+  //       return MaterialPageRoute(builder: (_) => DashboardScreen());
+  //
+  //     default:
+  //       return MaterialPageRoute(
+  //         builder: (_) => Scaffold(
+  //           body: Center(
+  //             child: Text('No route defined for ${settings.name}'),
+  //           ),
+  //         ),
+  //       );
+  //   }
+  // }
 }
 
 // Update the main.dart to use these routes:

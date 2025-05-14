@@ -114,13 +114,16 @@ class _RewardScreenState extends State<RewardScreen>
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios, size: 18),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                // Don't try to pop, just go back to home in parent Navigator
+                // The WillPopScope in dashboard will handle it
+              },
             ),
           ),
 
           // Title
           const Text(
-            'Club Rewards',
+            'Rewards',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
 
@@ -148,7 +151,7 @@ class _RewardScreenState extends State<RewardScreen>
                         color: Colors.white, size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      '1', // '${user?.points ?? 0}',
+                       '${user?.tokens ?? 0}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,

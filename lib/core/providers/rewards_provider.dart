@@ -92,7 +92,7 @@ class RewardsProvider extends ChangeNotifier {
       final success = await _rewardsService.redeemReward(rewardId);
 
       if (success) {
-        // Refresh profile to get updated points
+        // Refresh drawer to get updated points
         await _profileProvider.getProfileDetails();
       }
 

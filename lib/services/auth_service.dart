@@ -59,7 +59,6 @@ class AuthService {
     required String city,
     required String cnic,
     required String shopNumber,
-    required String address,
     required String role,
     required String password,
   }) async {
@@ -74,7 +73,6 @@ class AuthService {
           'city': city,
           'cnic': cnic,
           'shop_number': shopNumber,
-          'address': address,
           'role': role,
           'password': password,
         },
@@ -94,7 +92,7 @@ class AuthService {
   }) async {
     try {
       final response = await _apiClient.post(
-        '/verify-otp',
+        '/register',
         body: {
           'email': email,
           'otp': otp,
@@ -105,13 +103,13 @@ class AuthService {
       // Extract token from response
       final data = response.data;
       final token = data['token'];
-      final refreshToken = data['refresh_token'];
+      // final refreshToken = data['refresh_token'];
 
       // Save tokens
       await TokenManager.saveToken(token);
-      if (refreshToken != null) {
-        await TokenManager.saveRefreshToken(refreshToken);
-      }
+      // if (token != null) {
+      //   await TokenManager.saveRefreshToken(token);
+      // }
 
       // Parse user data
       final userData = data['user'];
@@ -183,4 +181,18 @@ class AuthService {
       rememberMe: true,
     );
   }
+  Future<bool> requestPasswordReset(String email) async {
+    try {
+      final response = await _apiClient.post(
+        '/forgot-password',
+        body: {'email': email},
+        requiresAuth: false,
+      );
+
+      return response.isSuccess;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
 }

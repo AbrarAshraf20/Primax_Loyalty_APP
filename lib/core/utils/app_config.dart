@@ -4,8 +4,8 @@
 /// Configuration class for app-wide settings
 class AppConfig {
   // API settings
-  static const String apiBaseUrl = 'http://afghancloth.com/api'; // Replace with your actual API base URL for production
-  static const String imageBaseUrl = 'http://afghancloth.com/'; // Replace with your actual API base URL for production
+  static const String apiBaseUrl = 'https://www.primaxloyaltyprogram.com/api'; // Replace with your actual API base URL for production
+  static const String imageBaseUrl = 'https://www.primaxloyaltyprogram.com/'; // Replace with your actual API base URL for production
   // static const String apiBaseUrl = 'https://dashboard.primaxsolarenergy.com/api'; // Replace with your actual API base URL for production
   static const int defaultRequestTimeoutSeconds = 30;
 

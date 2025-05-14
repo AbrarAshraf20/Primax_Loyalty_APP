@@ -255,7 +255,7 @@ class _VerifySerialState extends State<VerifySerial> {
                         decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20)),
-                        child: SvgPicture.asset("assets/icons/Back.svg")),
+                        child: Icon(CupertinoIcons.back,color: Colors.black,)),
                   ),
                   Text(
                     'Verify Serial',

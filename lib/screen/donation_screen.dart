@@ -1,4 +1,5 @@
 // lib/screen/donation_screen.dart
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:primax/core/utils/app_config.dart';
@@ -8,6 +9,7 @@ import 'package:primax/core/providers/profile_provider.dart';
 import 'package:primax/services/connectivity_service.dart';
 import '../models/foundation.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/custom_snackbar.dart';
 
 class DonationScreen extends StatefulWidget {
   const DonationScreen({Key? key}) : super(key: key);
@@ -61,8 +63,10 @@ class _DonationScreenState extends State<DonationScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: IconButton(
-                        icon: SvgPicture.asset("assets/icons/Back.svg"),
-                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(CupertinoIcons.back,color: Colors.black,),
+                        onPressed: () {
+                          // Do nothing - let WillPopScope in parent dashboard handle back navigation
+                        },
                       ),
                     ),
                   ),
@@ -310,7 +314,7 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: IconButton(
-                        icon: SvgPicture.asset("assets/icons/Back.svg"),
+                        icon: Icon(CupertinoIcons.back,color: Colors.black,),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -468,11 +472,9 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
                           // Check if user has enough points
                           final userPoints = profileProvider.userProfile?.tokens ?? 0;
                           if (userPoints < requiredPoints) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Not enough points to make a donation'),
-                                backgroundColor: Colors.red,
-                              ),
+                            // Use the new custom SnackBar that doesn't affect layout
+                            CustomSnackBar.showError(
+                              message: 'Not enough points to make a donation',
                             );
                             return;
                           }
@@ -665,10 +667,9 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
                           ? (){}
                           : () async {
                         if (nameController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please enter your name'),
-                            ),
+                          CustomSnackBar.showError(
+                            context: context,
+                            message: 'Please enter your name',
                           );
                           return;
                         }
@@ -685,11 +686,9 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
                           Navigator.of(context).pop();
 
                           // Show success message
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(donationProvider.successMessage),
-                              backgroundColor: Colors.green,
-                            ),
+                          CustomSnackBar.showSuccess(
+                            context: context,
+                            message: donationProvider.successMessage,
                           );
                         }
                       },

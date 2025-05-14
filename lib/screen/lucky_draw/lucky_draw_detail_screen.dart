@@ -6,6 +6,7 @@ import 'package:primax/core/providers/profile_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../widgets/network_status_indicator.dart';
+import '../../widgets/custom_snackbar.dart';
 
 class LuckyDrawDetailScreen extends StatefulWidget {
   const LuckyDrawDetailScreen({Key? key}) : super(key: key);
@@ -333,25 +334,19 @@ class _LuckyDrawDetailScreenState extends State<LuckyDrawDetailScreen> {
     });
 
     if (success) {
-      // Refresh profile to update points
+      // Refresh drawer to update points
       await Provider.of<ProfileProvider>(context, listen: false).getProfileDetails();
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Successfully entered the lucky draw!'),
-          backgroundColor: Colors.green,
-        ),
+      // Show success message using CustomSnackBar
+      CustomSnackBar.showSuccess(
+        message: 'Successfully entered the lucky draw!',
       );
     } else {
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(luckyDrawProvider.errorMessage.isNotEmpty
-              ? luckyDrawProvider.errorMessage
-              : 'Failed to enter the lucky draw'),
-          backgroundColor: Colors.red,
-        ),
+      // Show error message using CustomSnackBar
+      CustomSnackBar.showError(
+        message: luckyDrawProvider.errorMessage.isNotEmpty
+            ? luckyDrawProvider.errorMessage
+            : 'Failed to enter the lucky draw',
       );
     }
   }

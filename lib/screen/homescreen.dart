@@ -1,9 +1,46 @@
+// lib/screen/homescreen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:primax/core/utils/app_config.dart';
+import 'package:primax/screen/primax_products/show_all_product_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:primax/core/providers/profile_provider.dart';
+import 'package:primax/core/providers/home_provider.dart';
+import 'package:nb_utils/nb_utils.dart';
 
-import 'profile/drawer.dart';
+import '../models/brand_model.dart';
+import 'drawer/drawer.dart';
+import 'login_screen/login_screen.dart';
 
-class HomeScreen1 extends StatelessWidget {
+class HomeScreen1 extends StatefulWidget {
+  @override
+  _HomeScreen1State createState() => _HomeScreen1State();
+}
+
+class _HomeScreen1State extends State<HomeScreen1> {
+  @override
+  void initState() {
+    super.initState();
+    // Schedule the data loading AFTER the first build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeData();
+    });
+  }
+
+  Future<void> _initializeData() async {
+    final homeProvider = Provider.of<HomeProvider>(context, listen: false);
+    await homeProvider.initialize();
+  }
+
+  void _navigateToLogin() async {
+    // Navigate to login screen and clear the stack
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+          (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,25 +51,115 @@ class HomeScreen1 extends StatelessWidget {
         elevation: 0,
         title: _buildProfileSection(context),
       ),
-
+      drawer: CustomDrawer(),
       body: Container(
-
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/LuckyDraw.png"), // Ensure the correct path
+            image: AssetImage("assets/images/LuckyDraw.png"),
             fit: BoxFit.cover,
           ),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildBannerSection(),
-              _buildSectionTitle("Club Rewards"),
-              _buildClubRewards(context),
-              _buildSectionTitle("Features Rewards"),
-              _buildFeatureRewards(),
-            ],
+        child: RefreshIndicator(
+          onRefresh: () => Provider.of<HomeProvider>(context, listen: false).refreshData(),
+          child: Consumer<HomeProvider>(
+            builder: (context, homeProvider, _) {
+              if (homeProvider.isBrandsLoading) {
+                return Center(child: CircularProgressIndicator());
+              }
+
+              // Handle unauthorized state
+              if (homeProvider.isUnauthorized) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.lock_outline,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
+                      SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          'Your session has expired',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          'Please login again to continue',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _navigateToLogin,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          backgroundColor: Colors.blue,
+                        ),
+                        child: Text(
+                          'Login Again',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // Regular error handling
+              if (homeProvider.errorMessage.isNotEmpty && !homeProvider.isUnauthorized) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          homeProvider.errorMessage,
+                          style: TextStyle(color: Colors.red),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => homeProvider.refreshData(),
+                        child: Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildUserInfoCard(context),
+                    _buildSectionTitle("Our Brands"),
+                    _buildBrandsSection(homeProvider),
+                    SizedBox(height: 24),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -40,160 +167,407 @@ class HomeScreen1 extends StatelessWidget {
   }
 
   Widget _buildProfileSection(context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            GestureDetector(
-              onTap: (){
-               // Navigator.push(context, MaterialPageRoute(builder: (context)=>CustomDrawer()));
-              },
-              child: CircleAvatar(
-                backgroundImage: AssetImage("assets/images/Nola_Risk.png"), // Replace with NetworkImage for real images
-                radius: 20,
+    return Consumer<ProfileProvider>(
+      builder: (context, profileProvider, _) {
+        final user = profileProvider.userProfile;
+        final isLoading = profileProvider.isLoading;
 
-              ),
-            ),
-            SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
               children: [
-                Text("Welcome,", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                Text("Joe Sava", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                GestureDetector(
+                  onTap: () {
+                    Scaffold.of(context).openDrawer();
+                  },
+                  child: CircleAvatar(
+                    backgroundImage: user?.image != null
+                        ? NetworkImage("${AppConfig.imageBaseUrl}${user!.image!}")
+                        : AssetImage("assets/images/user_profile.png") as ImageProvider,
+                    radius: 20,
+                  ),
+                ),
+                SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Welcome,", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    isLoading
+                        ? SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(user?.name ?? "Guest User",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ],
             ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF00C853),
+                    const Color(0xFF00B0FF),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  SvgPicture.asset('assets/icons/Group2.svg', height: 20, width: 20),
+                  SizedBox(width: 4),
+                  isLoading
+                      ? SizedBox(height: 12, width: 12, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text('${user?.tokens ?? 0}',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16)),
+                ],
+              ),
+            )
           ],
-        ),
-        Container(
-          //margin: EdgeInsets.only(right: 16),
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,  // Start color at the top
-              end: Alignment.bottomCenter,
-              colors: [
-                const Color(0xFF00C853), // Default green
-                const Color(0xFF00B0FF), // Default blue
-              ],
-            ),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              SvgPicture.asset('assets/icons/Group2.svg'),
-              SizedBox(width: 4),
-              Text('160', style: TextStyle(fontWeight:FontWeight.bold,color: Colors.white)),
-            ],
-          ),
-        )
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildBannerSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.asset("assets/images/Frame3.png", fit: BoxFit.cover), // Replace with your image asset
-      ),
+  Widget _buildUserInfoCard(BuildContext context) {
+    return Consumer<ProfileProvider>(
+      builder: (context, profileProvider, _) {
+        final user = profileProvider.userProfile;
+        final isLoading = profileProvider.isLoading;
+
+        return Container(
+          margin: EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF00C853),
+                const Color(0xFF00B0FF),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage: user?.image != null
+                        ? NetworkImage("${AppConfig.imageBaseUrl}${user!.image!}")
+                        : AssetImage("assets/images/user_profile.png") as ImageProvider,
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.name ?? "Guest User",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          user?.email ?? "guest@example.com",
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Your Tokens",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        SvgPicture.asset(
+                          'assets/icons/Group2.svg',
+                          color: Colors.white,
+                          height: 24,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          '${user?.tokens ?? 0}',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          Text("View All", style: TextStyle(color: Colors.blue, fontSize: 14)),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
       ),
     );
   }
 
-  Widget _buildClubRewards(context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.asset("assets/images/Rectangle23.png",width: MediaQuery.of(context).size.height * 0.65, fit: BoxFit.cover), // Replace with actual image
-      ),
-    );
-  }
+  Widget _buildBrandsSection(HomeProvider homeProvider) {
+    final brands = homeProvider.brands;
 
-  Widget _buildFeatureRewards() {
-    return SizedBox(
-      height: 180,
-      child: ListView.builder(
-        shrinkWrap: true,
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        itemCount: 4, // Change based on items
-        itemBuilder: (context, index) {
-          return Container(
-            width: 140,
-            margin: EdgeInsets.only(right: 10),
-            decoration: BoxDecoration(
-              color: Color(0xffF4F4F6),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 5)],
+    if (homeProvider.isBrandsLoading) {
+      return Container(
+        height: 200,
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (brands.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(16),
+        child: Center(
+          child: Text(
+            "No brands available",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 16,
             ),
-            child: Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset("assets/images/Frame11.png",width: 140, fit: BoxFit.cover), // Replace with actual image
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      itemCount: brands.length,
+      itemBuilder: (context, index) {
+        final brand = brands[index];
+        return _buildBrandCard(brand);
+      },
+    );
+  }
+
+  Widget _buildBrandCard(Brand brand) {
+    return GestureDetector(
+      onTap: () {
+        _onBrandTap(brand);
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 15,
+              offset: Offset(0, 5),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              // Gradient decoration
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      colors: [
+                        Color(0xFF00C853).withOpacity(0.1),
+                        Color(0xFF00B0FF).withOpacity(0.1),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(20),
+                      bottomLeft: Radius.circular(100),
+                    ),
+                  ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(5),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Led TV Redeem", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+              ),
+              // Content
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _onBrandTap(brand),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        // Brand Logo with gradient border
                         Container(
-                          width: 60,height: 30,
-                          margin: EdgeInsets.only(right: 16),
-                          padding: EdgeInsets.symmetric( vertical: 6),
+                          padding: EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              begin: Alignment.topCenter,  // Start color at the top
-                              end: Alignment.bottomCenter,
                               colors: [
-                                const Color(0xFF00C853), // Default green
-                                const Color(0xFF00B0FF), // Default blue
+                                const Color(0xFF00C853),
+                                const Color(0xFF00B0FF),
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          child: Row(
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: Padding(
+                                padding: EdgeInsets.all(8),
+                                child: brand.imageUrl != null && brand.imageUrl!.isNotEmpty
+                                    ? Image.network(
+                                  brand.imageUrl!,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return _buildBrandPlaceholder();
+                                  },
+                                )
+                                    : _buildBrandPlaceholder(),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 20),
+                        // Brand Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              SvgPicture.asset('assets/icons/Group2.svg'),
-                              SizedBox(width: 4),
-                              Text('160', style: TextStyle(fontWeight:FontWeight.bold,color: Colors.white)),
+                              Text(
+                                brand.name,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              SizedBox(height: 6),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: Text(
+                                  'Leading provider of innovative solar solutions.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
-
-                        CircleAvatar(
-                        radius: 15,
-                        backgroundColor: Color(0xffE9E9E9),
-                        child: SvgPicture.asset('assets/icons/Vector.svg'),
-                      ),],)
-                    ],
+                        // Arrow Icon with animation
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF00C853),
+                                const Color(0xFF00B0FF),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _buildBrandPlaceholder() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.grey[300]!,
+            Colors.grey[200]!,
+          ],
+        ),
+      ),
+      child: Icon(
+        Icons.business,
+        size: 40,
+        color: Colors.grey[400],
+      ),
+    );
+  }
+
+  void _onBrandTap(Brand brand) {
+    ShowAllProductScreen(brandName: brand.name,)
+        .launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
   }
 }

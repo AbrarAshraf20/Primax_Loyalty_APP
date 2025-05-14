@@ -1,25 +1,75 @@
 // lib/main.dart
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:primax/core/providers/lucky_draw_provider.dart';
+import 'package:primax/screen/create_account_screen/create_account_screen.dart';
 import 'package:primax/services/connectivity_service.dart';
+import 'package:primax/widgets/custom_snackbar.dart';
 import 'package:provider/provider.dart';
 import 'core/di/service_locator.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/donation_provider.dart';
+import 'core/providers/home_provider.dart';
 import 'core/providers/network_status_provider.dart';
 import 'core/providers/points_provider.dart';
 import 'core/providers/profile_provider.dart';
 import 'core/providers/rewards_provider.dart';
 import 'core/providers/scan_provider.dart';
+import 'firebase_options.dart';
 import 'routes/routes.dart';
 
+Future<void> _initializeGeolocator() async {
+  // Check and request location permissions
+  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    // Location services are not enabled - handle this case
+    print('Location services are disabled.');
+    return;
+  }
 
-void main() {
+  LocationPermission permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      // Permissions are denied, next time you could try
+      // requesting permissions again
+      print('Location permissions are denied');
+      return;
+    }
+  }
+
+  if (permission == LocationPermission.deniedForever) {
+    // Permissions are denied forever, handle this case
+    print('Location permissions are permanently denied, we cannot request permissions.');
+    return;
+  }
+
+  // If we got here, permissions are granted
+  print('Location permissions are granted');
+}
+
+Future<void> main() async {
   // Initialize dependency injection
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Initialize Geolocator
+  await _initializeGeolocator();
+
+  // Setup service locator
   setupServiceLocator();
 
+  // Run app
   runApp(const MyApp());
 }
+
+// Global key for the ScaffoldMessenger - used for showing SnackBars without affecting layout
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -44,6 +94,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(),
         ),
+
+        ChangeNotifierProvider(create: (_) => locator<HomeProvider>()),
 
         // Other providers
         ChangeNotifierProxyProvider<AuthProvider, ProfileProvider>(
@@ -77,10 +129,30 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Lucky Draw App',
+            scaffoldMessengerKey: rootScaffoldMessengerKey, // Use global key for SnackBar management
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
               useMaterial3: true,
+              // Configure SnackBar theme to appear above bottom navigation
+              snackBarTheme: const SnackBarThemeData(
+                behavior: SnackBarBehavior.floating,
+                insetPadding: EdgeInsets.only(bottom: 90, left: 10, right: 10),
+              ),
             ),
+            onGenerateRoute: (settings) {
+              // Debug print to verify route name
+              print('Current route: ${settings.name}');
+
+              switch (settings.name) {
+                case Routes.register:
+                  return MaterialPageRoute(
+                    builder: (context) => CreateAccountScreen.fromRouteSettings(settings),
+                  );
+                default:
+                // Return null to let the routes property handle other routes
+                  return null;
+              }
+            },
             initialRoute: Routes.splash,
             routes: Routes.routes,
             // Use a navigation observer to handle authentication state
@@ -117,25 +189,36 @@ class AuthNavigationObserver extends NavigatorObserver {
   void _checkAuthenticationForRoute(Route<dynamic> route) {
     // Skip checking for certain routes
     final String routeName = route.settings.name ?? '';
+    print('Checking route: $routeName'); // Debug print
 
-    if (routeName == Routes.splash ||
-        routeName == Routes.login ||
-        routeName == Routes.otp ||
-        routeName == Routes.forgotPassword ||
-        routeName == Routes.resetPassword ||
-        routeName == Routes.register) {
+    // Skip empty route names
+    if (routeName.isEmpty) {
       return;
     }
 
-    // Check if user is authenticated for protected routes
+    // Check if it's a public route first
+    final List<String> publicRoutes = [
+      Routes.splash,
+      Routes.login,
+      Routes.otp,
+      Routes.forgotPassword,
+      Routes.resetPassword,
+      Routes.platform,
+      Routes.register,
+    ];
+
+    if (publicRoutes.contains(routeName)) {
+      print('Public route - allowing access');
+      return;
+    }
+
+    // Only check authentication for protected routes
     if (!authProvider.isLoggedIn) {
-      // If not authenticated, redirect to login after a short delay
-      Future.delayed(const Duration(milliseconds: 100), () {
-        navigator?.pushNamedAndRemoveUntil(
-          Routes.login,
-              (route) => false,
-        );
-      });
+      print('User not logged in - redirecting to login');
+      navigator?.pushNamedAndRemoveUntil(
+        Routes.login,
+            (route) => false,
+      );
     }
   }
 }

@@ -1,4 +1,6 @@
 // lib/services/scan_service.dart
+import 'dart:io';
+
 import '../core/network/api_client.dart';
 import '../core/network/api_exception.dart';
 import '../core/di/service_locator.dart';
@@ -49,6 +51,7 @@ class ScanService {
     required String customerContactInfo,
     required String customerAddress,
     required String remarks,
+    required File image,
     // You might need to add parameters for the uploaded pics of installation site
   }) async {
     try {
@@ -66,6 +69,7 @@ class ScanService {
           'customer_address': customerAddress,
           'remarks': remarks,
         },
+        files: [MapEntry('image', image)],
         // You might need to add files parameter for installation site pictures
       );
 

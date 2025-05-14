@@ -77,7 +77,8 @@ class CustomDrawer extends StatelessWidget {
                 text: "Claimed Point History",
                 onTap: () {
                   Navigator.pop(context);
-                  // Navigator.pushNamed(context, Routes.accountLedger);
+
+                  Navigator.pushNamed(context, Routes.pointsHistory);
                 },
               ),
               Divider(indent: 35, endIndent: 25),
@@ -102,7 +103,7 @@ class CustomDrawer extends StatelessWidget {
 
                   WebViewScreen(
                     url: '${AppConfig.imageBaseUrl}privacy-policy',
-                    title: 'Terms and Conditions',
+                    title: 'Privacy Policy',
                   ).launch(context,
                       pageRouteAnimation: PageRouteAnimation.Slide);
 
@@ -111,13 +112,13 @@ class CustomDrawer extends StatelessWidget {
               ),
               DrawerItem(
                 icon: SvgPicture.asset("assets/icons/Group_4.svg"),
-                text: "Contact Support",
+                text: "Contact us",
                 onTap: () {
                   Navigator.pop(context);
 
                   WebViewScreen(
                     url: '${AppConfig.imageBaseUrl}contact',
-                    title: 'Terms and Conditions',
+                    title: 'Contact us',
                   ).launch(context,
                       pageRouteAnimation: PageRouteAnimation.Slide);
 

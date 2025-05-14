@@ -1,7 +1,9 @@
 // lib/core/di/service_locator.dart
 import 'package:get_it/get_it.dart';
+import 'package:primax/core/providers/home_provider.dart';
 import 'package:primax/core/providers/lucky_draw_provider.dart';
 import 'package:primax/services/connectivity_service.dart';
+import 'package:primax/services/home_service.dart';
 import 'package:primax/services/lucky_draw_service.dart';
 
 import '../../services/donation_service.dart' show DonationService;
@@ -37,6 +39,7 @@ void setupServiceLocator() {
 
   // Feature-specific services
   locator.registerLazySingleton<AuthService>(() => AuthService());
+  locator.registerLazySingleton<HomeService>(() => HomeService());
   locator.registerLazySingleton<ProfileService>(() => ProfileService());
   locator.registerLazySingleton<RewardsService>(() => RewardsService());
   locator.registerLazySingleton<ScanService>(() => ScanService());
@@ -44,8 +47,12 @@ void setupServiceLocator() {
   locator.registerLazySingleton<DonationService>(() => DonationService());
   locator.registerLazySingleton<LuckyDrawService>(() => LuckyDrawService());
 
+
+  // Register providers
+
   // Register providers
   locator.registerFactory<AuthProvider>(() => AuthProvider());
+  locator.registerFactory<HomeProvider>(() => HomeProvider());
   locator.registerFactory<ProfileProvider>(() => ProfileProvider());
   locator.registerFactory<RewardsProvider>(() => RewardsProvider());
   locator.registerFactory<ScanProvider>(() => ScanProvider());

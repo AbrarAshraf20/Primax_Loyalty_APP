@@ -1,4 +1,6 @@
 // lib/providers/scan_provider.dart
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:primax/core/di/service_locator.dart';
 import 'package:primax/services/scan_service.dart';
@@ -33,11 +35,11 @@ class ScanProvider extends ChangeNotifier {
         _successMessage = result['message'] ?? 'Scan successful';
         _lastPointsEarned = result['pointsEarned'] ?? 0;
 
-        // Update profile provider with new points total if available
+        // Update drawer provider with new points total if available
         if (result['totalPoints'] != null) {
           _profileProvider.updatePoints(result['totalPoints']);
         } else {
-          // Refresh profile to get updated points
+          // Refresh drawer to get updated points
           await _profileProvider.getProfileDetails();
         }
 
@@ -65,6 +67,7 @@ class ScanProvider extends ChangeNotifier {
     required String customerContactInfo,
     required String customerAddress,
     required String remarks,
+    required File image,
   }) async {
     _setLoading(true);
     _clearMessages();
@@ -79,6 +82,7 @@ class ScanProvider extends ChangeNotifier {
         customerContactInfo: customerContactInfo,
         customerAddress: customerAddress,
         remarks: remarks,
+        image: image,
       );
 
       if (success) {

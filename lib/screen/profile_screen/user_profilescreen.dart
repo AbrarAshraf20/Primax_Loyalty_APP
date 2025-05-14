@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -21,13 +22,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isInitialized) {
-      _loadProfileData();
-      _isInitialized = true;
-    }
+    // Always load profile data when dependencies change (e.g., when returning from edit screen)
+    _loadProfileData();
+    _isInitialized = true;
   }
 
-  // Fetch profile data when screen loads
+  // Fetch drawer data when screen loads
   Future<void> _loadProfileData() async {
     final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
     await profileProvider.getProfileDetails();
@@ -72,7 +72,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: SvgPicture.asset("assets/icons/Back.svg"),
+                                child: Icon(CupertinoIcons.back,color: Colors.black,),
                               ),
                             ),
                           ),
@@ -93,9 +93,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 80,
-                            backgroundImage: user?.image != null
-                                ? NetworkImage("${AppConfig.imageBaseUrl}${user!.image!}")
+                            backgroundImage: user?.image != null && user!.image!.isNotEmpty
+                                ? NetworkImage(
+                                    user.image!.startsWith('http')
+                                      ? user.image!
+                                      : "${AppConfig.imageBaseUrl}${user.image!}"
+                                  )
                                 : AssetImage('assets/images/user_profile.png') as ImageProvider,
+                            onBackgroundImageError: (exception, stackTrace) {
+                              // If image fails to load, fall back to default
+                              print('Error loading profile image: $exception');
+                            },
                           ),
                           SizedBox(height: 8),
                           Text(
@@ -152,19 +160,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               _buildStatusButton(
-                                SvgPicture.asset("assets/icons/Group_c.svg"),
-                                // user?.isVerified ==
-                                    true ? "Verified" : "Unverified",
-                                // user?.isVerified ==
-                                    true ? Colors.green : Colors.orange,
+                                SvgPicture.asset("assets/icons/verification.svg"),
+                                // Check email verification status (emailVerifiedAt is not null)
+                                user?.emailVerifiedAt != null ? "Verified" : "Unverified",
+                                user?.emailVerifiedAt != null ? Colors.green : Colors.orange,
                               ),
                               _buildStatusButton(
-                                SvgPicture.asset("assets/icons/Group_b.svg"),
-                                user?.role ?? "User",
+                               user?.role =='Installer' ? SvgPicture.asset("assets/icons/installer.svg")
+                                :user?.role =='Dealer'?SvgPicture.asset("assets/icons/dealer.svg")
+                                :SvgPicture.asset("assets/icons/distributer.svg"),
+                                // Capitalize the first letter of the role and handle null cases
+                                user?.role != null
+                                    ? user!.role!.isNotEmpty
+                                        ? user.role![0].toUpperCase() + user.role!.substring(1).toLowerCase()
+                                        : "User"
+                                    : "User",
                                 Colors.red,
                               ),
                               _buildStatusButton(
-                                SvgPicture.asset("assets/icons/Group_a.svg"),
+                                SvgPicture.asset("assets/icons/qr_code.svg"),
                                 "QR Code",
                                 Colors.black,
                               ),
@@ -191,7 +205,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         ),
                         child: Row(
                           children: [
-                            SvgPicture.asset("assets/icons/Notification_icon.svg", color: Colors.white),
+                            SvgPicture.asset("assets/icons/notification.svg", color: Colors.white),
                             SizedBox(width: 10),
                             Expanded(
                               child: Column(
@@ -217,15 +231,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
                     // Menu Items
                     _buildMenuItem("Personal Information", SvgPicture.asset("assets/icons/user.svg", color: Colors.black87), context, () {
-                      // Navigate to personal info edit screen
+                      // Navigate to personal info edit screen and refresh on return
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => PersonalInfoScreen(),
                         ),
-                      );
+                      ).then((_) {
+                        // Force refresh profile data when returning from edit screen
+                        _loadProfileData();
+                      });
                     }),
-                    _buildMenuItem("Address", SvgPicture.asset("assets/icons/home_a.svg", color: Colors.black87), context, () {
+                    _buildMenuItem("Address", SvgPicture.asset("assets/icons/home.svg", color: Colors.black87), context, () {
                       // Navigate to address management screen
                       Navigator.push(
                         context,
@@ -235,13 +252,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       );
 
                     }),
-                    _buildMenuItem("Claimed Points", SvgPicture.asset("assets/icons/Frame_a.svg", color: Colors.black87), context, () {
+                    _buildMenuItem("Claimed Points", SvgPicture.asset("assets/icons/messages.svg", color: Colors.black87), context, () {
                       // Navigate to points history screen
                       launchNewScreen(context, Routes.pointsHistory);
                       // Navigator.pushNamed(context, Routes.pointsHistory);
                     }),
-                    _buildMenuItemWithSwitch("Notifications", SvgPicture.asset("assets/icons/Notifications.svg", color: Colors.black87), context),
-                    _buildMenuItem("Change Password", SvgPicture.asset("assets/icons/Fats_Delivery.svg", color: Colors.black87), context, () {
+                    _buildMenuItemWithSwitch("Notifications", SvgPicture.asset("assets/icons/notification.svg", color: Colors.black87), context),
+                    _buildMenuItem("Change Password", SvgPicture.asset("assets/icons/lock.svg", color: Colors.black87), context, () {
                       launchNewScreen(context, Routes.resetPassword);
 
                       // Navigate to change password screen

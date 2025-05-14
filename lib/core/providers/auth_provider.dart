@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:primax/core/di/service_locator.dart';
 import 'package:primax/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/user_model.dart';
 import '../network/api_exception.dart';
 import '../network/token_manager.dart';
@@ -103,7 +104,6 @@ class AuthProvider extends ChangeNotifier {
     required String city,
     required String cnic,
     required String shopNumber,
-    required String address,
     required String role,
     required String password,
   }) async {
@@ -121,7 +121,6 @@ class AuthProvider extends ChangeNotifier {
         'city': city,
         'cnic': cnic,
         'shop_number': shopNumber,
-        'address': address,
         'role': role,
         'password': password,
       };
@@ -134,7 +133,6 @@ class AuthProvider extends ChangeNotifier {
         city: city,
         cnic: cnic,
         shopNumber: shopNumber,
-        address: address,
         role: role,
         password: password,
       );
@@ -173,7 +171,8 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
       return false;
     } catch (e) {
-      _setError('An unexpected error occurred');
+      print('error: $e');
+      _setError('An unexpected error occurred $e');
       _setLoading(false);
       return false;
     }
@@ -304,4 +303,60 @@ class AuthProvider extends ChangeNotifier {
     _currentUser = user;
     notifyListeners();
   }
+  Future<bool> requestPasswordReset(String email) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final success = await _authService.requestPasswordReset(email);
+
+      if (success) {
+        // Optional: Store email for later use
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('reset_email', email);
+      }
+
+      _setLoading(false);
+      return success;
+    } on ApiException catch (e) {
+      _setError(e.message);
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('An unexpected error occurred');
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  // // Reset password with token from email link
+  // Future<bool> resetPasswordWithToken({
+  //   required String email,
+  //   required String token,
+  //   required String newPassword,
+  //   required String confirmPassword,
+  // }) async {
+  //   _setLoading(true);
+  //   _clearError();
+  //
+  //   try {
+  //     final success = await _authService.resetPasswordWithToken(
+  //       email: email,
+  //       token: token,
+  //       newPassword: newPassword,
+  //       confirmPassword: confirmPassword,
+  //     );
+  //
+  //     _setLoading(false);
+  //     return success;
+  //   } on ApiException catch (e) {
+  //     _setError(e.message);
+  //     _setLoading(false);
+  //     return false;
+  //   } catch (e) {
+  //     _setError('An unexpected error occurred');
+  //     _setLoading(false);
+  //     return false;
+  //   }
+  // }
 }

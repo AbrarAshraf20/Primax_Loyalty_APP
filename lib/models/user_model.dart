@@ -7,12 +7,12 @@ class User {
   final String? city;
   final String? cnicNumber;
   final String? companyShopNumber;
-  final String role;
-  final int tokens;
+  final String? role;
+  final int? tokens;
   final String? image;
   final String? emailVerifiedAt;
-  final String createdAt;
-  final String updatedAt;
+  final String? createdAt;
+  final String? updatedAt;
 
   User({
     required this.id,

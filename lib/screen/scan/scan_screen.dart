@@ -1,4 +1,5 @@
 // lib/screen/scan/scan_screen.dart
+import 'dart:math' as Math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:primax/core/providers/profile_provider.dart';
@@ -67,7 +68,10 @@ class _ScanScreenState extends State<ScanScreen> {
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.arrow_back_ios, size: 16),
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              // Don't try to pop, just go back to home in parent Navigator
+                              // by not doing anything - the WillPopScope in dashboard will handle it
+                            },
                           ),
                         ),
                       ),
@@ -145,7 +149,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
             // Camera icon
             SvgPicture.asset(
-              'assets/icons/XMLID.svg',
+              'assets/icons/xmlid.svg',
               height: 120,
               color: Colors.white,
             ),
@@ -173,23 +177,39 @@ class _ScanScreenState extends State<ScanScreen> {
 
             const SizedBox(height: 25),
 
-            // Scan button
-            GestureDetector(
-              onTap: isConnected ? () => _launchBarcodeScannerCamera(context) : null,
-              child: Container(
-                width: double.infinity,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: isConnected ? Colors.white : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: Center(
-                  child: Text(
-                    isConnected ? "Scan Now" : "No Internet Connection",
-                    style: TextStyle(
-                      color: isConnected ? Colors.black : Colors.grey[600],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+            // Scan button with Hero animation for smooth transition
+            Hero(
+              tag: 'scanner_screen', // Same tag used in the scanner screen
+              child: Material(
+                color: Colors.transparent,
+                child: GestureDetector(
+                  onTap: isConnected ? () => _launchBarcodeScannerCamera(context) : null,
+                  child: Container(
+                    width: double.infinity,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: isConnected ? Colors.white : Colors.grey[300],
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.qr_code_scanner,
+                            color: isConnected ? Colors.black : Colors.grey[600],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isConnected ? "Scan Now" : "No Internet Connection",
+                            style: TextStyle(
+                              color: isConnected ? Colors.black : Colors.grey[600],
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -326,19 +346,97 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   Future<void> _launchBarcodeScannerCamera(BuildContext context) async {
-    final barcode = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BarcodeScannerScreen(),
-      ),
+    // Show loading indicator while initializing scanner
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10)
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: Color(0xFF00C853)),
+                  SizedBox(height: 15),
+                  Text("Opening camera...", style: TextStyle(color: Colors.black87))
+                ],
+              ),
+            ),
+          ),
+        );
+      }
     );
 
-    if (barcode != null && barcode.isNotEmpty) {
-      _barcodeController.text = barcode;
+    try {
+      // Use a custom page route for smoother transition
+      final barcode = await Navigator.push<String>(
+        context,
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 300),
+          pageBuilder: (context, animation, secondaryAnimation) => const BarcodeScannerScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = 0.0;
+            const end = 1.0;
+            const curve = Curves.easeInOut;
 
-      // Automatically submit the barcode
-      final scanProvider = Provider.of<ScanProvider>(context, listen: false);
-      _submitBarcode(context, scanProvider);
+            var fadeAnimation = Tween(begin: begin, end: end).animate(
+              CurvedAnimation(parent: animation, curve: curve),
+            );
+
+            return FadeTransition(
+              opacity: fadeAnimation,
+              child: child,
+            );
+          },
+        ),
+      );
+
+      // Close loading dialog if it's still showing
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+
+      if (barcode != null && barcode.isNotEmpty) {
+        _barcodeController.text = barcode;
+
+        // Automatically submit the barcode
+        final scanProvider = Provider.of<ScanProvider>(context, listen: false);
+        _submitBarcode(context, scanProvider);
+      }
+    } catch (e) {
+      // Close loading dialog if error occurs
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+
+      debugPrint('Error launching scanner: $e');
+
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Camera Error'),
+            content: Text('Could not open camera. Please try again.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 

@@ -282,15 +282,37 @@ class ApiClient {
     } else {
       // Error response
       String errorMessage = 'Unknown error occurred';
+      Map<String, List<String>> validationErrors = {};
+
       if (responseBody != null && responseBody is Map) {
+        // Handle regular error messages
         if (responseBody.containsKey('message')) {
           errorMessage = responseBody['message'];
         } else if (responseBody.containsKey('error')) {
           errorMessage = responseBody['error'];
-        } else if (responseBody.containsKey('errors') &&
-            responseBody['errors'] is List &&
-            responseBody['errors'].isNotEmpty) {
-          errorMessage = responseBody['errors'][0];
+        } else if (responseBody.containsKey('status') && responseBody['status'] == 'error') {
+          errorMessage = 'Validation error occurred';
+        }
+
+        // Extract validation errors (used on 422 status code)
+        if (statusCode == 422 && responseBody.containsKey('errors')) {
+          final errors = responseBody['errors'];
+          if (errors is Map) {
+            errors.forEach((field, messages) {
+              if (messages is List) {
+                validationErrors[field] = List<String>.from(messages);
+              } else if (messages is String) {
+                validationErrors[field] = [messages];
+              }
+            });
+
+            // Create a user-friendly error message from the first validation error
+            if (validationErrors.isNotEmpty) {
+              final firstField = validationErrors.keys.first;
+              final firstError = validationErrors[firstField]!.first;
+              errorMessage = firstError;
+            }
+          }
         }
       }
 
@@ -298,6 +320,7 @@ class ApiClient {
         statusCode: statusCode,
         message: errorMessage,
         data: responseBody,
+        validationErrors: validationErrors,
       );
     }
   }

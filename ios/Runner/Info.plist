@@ -45,5 +45,15 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires camera access to take profile pictures</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to the photo library to select profile pictures</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to location only when selecting your current location on the map.</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
+	<key>GMSApiKey</key>
+	<string>AIzaSyDXCUC2HiimXAZ1kV25rT7wlmURbJUtE-o</string>
 </dict>
 </plist>

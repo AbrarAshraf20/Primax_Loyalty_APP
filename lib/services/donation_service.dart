@@ -45,7 +45,6 @@ class DonationService {
           'name': name,
           'message': message,
         },
-        requiresAuth: true,
       );
 
       if (response.isSuccess) {

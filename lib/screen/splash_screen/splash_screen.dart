@@ -1,13 +1,13 @@
-// lib/screen/splash_screen/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:primax/core/providers/auth_provider.dart';
+import 'package:primax/core/providers/profile_provider.dart';
+import 'package:primax/routes/routes.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
-import '../../core/providers/auth_provider.dart';
-import '../dashboard_screen/dashboard_screen.dart';
-import '../login_screen/login_screen.dart';
 import '../onboard_screen/onboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -18,59 +18,57 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  String appName = 'Primax';
+  String appVersion = '';
+
   @override
   void initState() {
     super.initState();
-    _checkNavigationFlow();
+    _getAppInfo();
+    _initializeApp();
+  }
+  
+  Future<void> _getAppInfo() async {
+    final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      appName = packageInfo.appName;
+      appVersion = packageInfo.version;
+    });
   }
 
-  Future<void> _checkNavigationFlow() async {
-    // Delay for splash animation
+  Future<void> _initializeApp() async {
+    // Give the splash screen time to display
     await Future.delayed(const Duration(seconds: 2));
 
-    // Check if onboarding is completed
+    // Check if the user has completed onboarding
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final bool onboardingComplete = prefs.getBool('onboardingComplete') ?? false;
 
-    if (!onboardingComplete) {
-      // If onboarding not completed, go to onboarding screen
-      if (mounted) {
-        OnboardScreen().launch(
-          context,
-          isNewTask: true,
-          pageRouteAnimation: PageRouteAnimation.Fade,
-        );
-      }
-      return;
-    }
+    if (onboardingComplete) {
+      // Check if the user is already logged in
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Check if user is logged in with remember me
-    if (!mounted) return;
+      if (authProvider.isLoggedIn) {
+        // User is logged in, load drawer data
+        final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+        try {
+          await profileProvider.getProfileDetails();
+        } catch (e) {
+          print('Error loading drawer: $e');
+          // Continue to dashboard even if drawer loading fails
+        }
 
-    // Get auth provider
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    // Check login status
-    final bool isLoggedIn = await authProvider.checkSavedCredentials();
-
-    if (isLoggedIn) {
-      // If user is logged in and remembered, go to dashboard
-      if (mounted) {
-        DashboardScreen().launch(
-          context,
-          isNewTask: true,
-          pageRouteAnimation: PageRouteAnimation.Fade,
-        );
+        // Navigate to dashboard
+        Navigator.pushReplacementNamed(context, Routes.dashboard);
+      } else {
+        // User is not logged in, navigate to login screen
+        Navigator.pushReplacementNamed(context, Routes.login);
       }
     } else {
-      // Otherwise, go to login screen
-      if (mounted) {
-        LoginScreen().launch(
-          context,
-          isNewTask: true,
-          pageRouteAnimation: PageRouteAnimation.Fade,
-        );
-      }
+      // User hasn't completed onboarding, navigate to onboarding screen
+      Navigator.pushReplacement(context, MaterialPageRoute(
+        builder: (context) =>  OnboardScreen(),
+      ));
     }
   }
 
@@ -84,15 +82,57 @@ class _SplashScreenState extends State<SplashScreen> {
             height: double.maxFinite,
             child: Image.asset('assets/images/img_splash.png', fit: BoxFit.cover),
           ),
-          Center(child: Image.asset('assets/images/app_logo.png', height: 200, width: 200)),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/images/app_logo.png', height: 200, width: 200),
+                const SizedBox(height: 20),
+                Text(
+                  appName,
+                  style: const TextStyle(
+                    fontSize: 28, 
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(1, 1),
+                        blurRadius: 3.0,
+                        color: Color.fromARGB(150, 0, 0, 0),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Version $appVersion',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(1, 1),
+                        blurRadius: 2.0,
+                        color: Color.fromARGB(150, 0, 0, 0),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
           Positioned(
             bottom: 50,
             left: 0,
             right: 0,
             child: Center(
-              child: Lottie.asset('assets/images/loader.json', height: 200, width: 200),
+              child: Lottie.asset(
+                'assets/images/loader.json',
+                height: 200,
+                width: 200,
+              ),
             ),
-          ),
+          )
         ],
       ),
     );
