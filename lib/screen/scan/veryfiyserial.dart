@@ -207,25 +207,320 @@ class _VerifySerialState extends State<VerifySerial> {
 
 
 
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/providers/scan_provider.dart';
 import '../../core/utils/app_colors.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text__form_field.dart';
 import '../dashboard_screen/dashboard_screen.dart';
 
 class VerifySerial extends StatefulWidget {
-  const VerifySerial({Key? key}) : super(key: key);
+  final String scanNumber;
+  
+  const VerifySerial({
+    Key? key, 
+    required this.scanNumber
+  }) : super(key: key);
 
   @override
   State<VerifySerial> createState() => _VerifySerialState();
 }
 
 class _VerifySerialState extends State<VerifySerial> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool isPasswordVisible = false;
+  bool isLoading = false;
+  File? _selectedImage;
+  
+  // Form controllers
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _itemController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _customerNameController = TextEditingController();
+  final TextEditingController _customerContactController = TextEditingController();
+  final TextEditingController _customerAddressController = TextEditingController();
+  final TextEditingController _remarksController = TextEditingController();
+  
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _mobileController.dispose();
+    _itemController.dispose();
+    _cityController.dispose();
+    _customerNameController.dispose();
+    _customerContactController.dispose();
+    _customerAddressController.dispose();
+    _remarksController.dispose();
+    super.dispose();
+  }
+  
+  Future<void> _pickImage() async {
+    // Show option dialog for camera or gallery
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          height: 200,
+          padding: EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Text(
+                'Select Image Source',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Camera option
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _getImage(ImageSource.camera);
+                    },
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00B0FF).withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.camera_alt,
+                            color: const Color(0xFF00B0FF),
+                            size: 30,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          'Camera',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Gallery option
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _getImage(ImageSource.gallery);
+                    },
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00C853).withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.image,
+                            color: const Color(0xFF00C853),
+                            size: 30,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          'Gallery',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  Future<void> _getImage(ImageSource source) async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(
+        source: source,
+        imageQuality: 80, // Reduce image quality to save space
+      );
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking image: $e')),
+      );
+    }
+  }
+  
+  // Submit the form
+  Future<void> _submitForm() async {
+    // Validate the form
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    
+    // Check if image is selected
+    if (_selectedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select an installation image')),
+      );
+      return;
+    }
+    
+    setState(() {
+      isLoading = true;
+    });
+    
+    final scanProvider = Provider.of<ScanProvider>(context, listen: false);
+    
+    try {
+      final success = await scanProvider.verifySerial(
+        serialNumber: widget.scanNumber, // Pass the scan number
+        name: _nameController.text,
+        mobile: _mobileController.text,
+        item: _itemController.text,
+        city: _cityController.text,
+        customerName: _customerNameController.text,
+        customerContactInfo: _customerContactController.text,
+        customerAddress: _customerAddressController.text,
+        remarks: _remarksController.text,
+        image: _selectedImage!,
+      );
+      
+      setState(() {
+        isLoading = false;
+      });
+      
+      if (success) {
+        _showSuccessScreen();
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred. Please try again.')),
+      );
+    }
+  }
+  
+  // Show success screen with API response
+  void _showSuccessScreen() {
+    final scanProvider = Provider.of<ScanProvider>(context, listen: false);
+    final message = scanProvider.verificationMessage;
+    final barcode = scanProvider.verificationBarcode;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check,
+                    color: Colors.green,
+                    size: 50,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Success!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  message, // Use API response message
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+                // Display barcode if available
+                if (barcode.isNotEmpty)
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.qr_code, size: 20, color: Colors.blue),
+                        SizedBox(width: 8),
+                        Text(
+                          'Barcode: $barcode',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 20),
+                CustomButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    Navigator.of(context).pop(); // Go back to scan screen
+                  },
+                  width: double.infinity,
+                  text: 'Done',
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -239,113 +534,164 @@ class _VerifySerialState extends State<VerifySerial> {
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Material(
-                    borderRadius: BorderRadius.circular(20),
-                    elevation: 2,
-                    child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Material(
+                      borderRadius: BorderRadius.circular(20),
+                      elevation: 2,
+                      child: InkWell(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: Icon(CupertinoIcons.back,color: Colors.black,)),
-                  ),
-                  Text(
-                    'Verify Serial',
-                    style: TextStyle(fontSize:20,fontWeight: FontWeight.bold),
-                  ),
-                  Container(
-                    //margin: EdgeInsets.only(right: 16),
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,  // Start color at the top
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          const Color(0xFF00C853), // Default green
-                          const Color(0xFF00B0FF), // Default blue
-                        ],
+                            borderRadius: BorderRadius.circular(20)
+                          ),
+                          child: Icon(CupertinoIcons.back, color: Colors.black),
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset('assets/icons/Group2.svg'),
-                        SizedBox(width: 4),
-                        Text('160', style: TextStyle(fontWeight:FontWeight.bold,color: Colors.white)),
-                      ],
+                    Text(
+                      'Verify Serial',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                  )
-                ],
-              ),
-              const SizedBox(height: 10),
+                    Consumer<ScanProvider>(
+                      builder: (context, provider, _) {
+                        return Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                const Color(0xFF00C853), // Default green
+                                const Color(0xFF00B0FF), // Default blue
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.stars, color: Colors.white),
+                              SizedBox(width: 4),
+                              Text('160', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                            ],
+                          ),
+                        );
+                      },
+                    )
+                  ],
+                ),
+                const SizedBox(height: 10),
+                
+                // Display scan number
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFF00B0FF), width: 1.5),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.qr_code, color: const Color(0xFF00B0FF)),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Scan Number', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text(widget.scanNumber, style: TextStyle(fontSize: 16)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
 
               Text('Name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
+                controller: _nameController,
                 hintText: 'Name',
                 hintStyle: TextStyle(color: Colors.grey),
+                validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
               ),
               const SizedBox(height: 20),
 
               Text('Mobile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
+                controller: _mobileController,
                 hintText: 'Mobile',
                 hintStyle: TextStyle(color: Colors.grey),
+                // keyboardType: TextInputType.phone,
+                validator: (value) => value == null || value.isEmpty ? 'Please enter mobile number' : null,
               ),
               const SizedBox(height: 20),
 
               Text('Item', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
+                controller: _itemController,
                 hintText: 'Item',
                 hintStyle: TextStyle(color: Colors.grey),
                 suffix: IconButton(
-                  icon: SvgPicture.asset('assets/icons/MainIcon.svg'),
+                  icon: Icon(Icons.search, color: const Color(0xFF00B0FF)),
                   onPressed: () {},
                 ),
+                validator: (value) => value == null || value.isEmpty ? 'Please enter item name' : null,
               ),
               const SizedBox(height: 20),
 
               Text('City', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
+                controller: _cityController,
                 hintText: 'City',
                 hintStyle: TextStyle(color: Colors.grey),
                 suffix: IconButton(
-                  icon: SvgPicture.asset('assets/icons/MainIcon.svg'),
+                  icon: Icon(Icons.search, color: const Color(0xFF00B0FF)),
                   onPressed: () {},
                 ),
+                validator: (value) => value == null || value.isEmpty ? 'Please enter city' : null,
               ),
               const SizedBox(height: 20),
 
               Text('Customer Name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
+                controller: _customerNameController,
                 hintText: 'Customer name',
                 hintStyle: TextStyle(color: Colors.grey),
+                validator: (value) => value == null || value.isEmpty ? 'Please enter customer name' : null,
               ),
               const SizedBox(height: 20),
 
               Text('Customer Contact info', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
+                controller: _customerContactController,
                 hintText: 'Customer Contact info',
                 hintStyle: TextStyle(color: Colors.grey),
+                // keyboardType: TextInputType.phone,
+                validator: (value) => value == null || value.isEmpty ? 'Please enter customer contact info' : null,
               ),
               const SizedBox(height: 20),
 
               Text('Customer address', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               TextField(
+                controller: _customerAddressController,
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: "Customer address",
@@ -359,31 +705,54 @@ class _VerifySerialState extends State<VerifySerial> {
 
               Text('Upload Pics of Installation Site', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
-              CustomTextFormField(
-                hintText: 'Drag file here',
-                hintStyle: TextStyle(color: Colors.grey),
-                suffix: Container(
-                  width: 120,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF00C853), // Default green
-                        const Color(0xFF00B0FF), // Default blue
-                      ],
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                        child: _selectedImage != null 
+                          ? Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green),
+                                SizedBox(width: 8),
+                                Expanded(child: Text('Image selected', overflow: TextOverflow.ellipsis)),
+                              ],
+                            )
+                          : Text('Select installation image', style: TextStyle(color: Colors.grey)),
+                      ),
                     ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Image.asset('assets/images/folder.png', scale: 2),
-                        Text('Browse...', style: TextStyle(color: Colors.white)),
-                      ],
+                    InkWell(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: 120,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF00C853), // Default green
+                              const Color(0xFF00B0FF), // Default blue
+                            ],
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Icon(Icons.file_upload, color: Colors.white, size: 20),
+                              Text('Browse...', style: TextStyle(color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
               const SizedBox(height: 20),
@@ -391,22 +760,44 @@ class _VerifySerialState extends State<VerifySerial> {
               Text('Remarks', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
+                controller: _remarksController,
                 hintText: 'Remarks',
                 hintStyle: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 20),
-
-              CustomButton(
-                onPressed: () {
-                  DashboardScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Slide);
+              
+              // Error message if any
+              Consumer<ScanProvider>(
+                builder: (context, provider, _) {
+                  if (provider.errorMessage.isNotEmpty) {
+                    return Container(
+                      padding: EdgeInsets.all(12),
+                      margin: EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        provider.errorMessage,
+                        style: TextStyle(color: Colors.red.shade800),
+                      ),
+                    );
+                  }
+                  return SizedBox.shrink();
                 },
+              ),
+
+              // Submit button
+              CustomButton(
+                onPressed: _submitForm,
+                isLoading: isLoading,
                 width: double.infinity,
-                text: 'Save',
+                text: 'Submit',
               ),
             ],
           ),
         ),
       ),
-    );
+    ));
   }
 }

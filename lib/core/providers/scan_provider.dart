@@ -58,7 +58,15 @@ class ScanProvider extends ChangeNotifier {
   }
 
   // Verify serial
+  String _verificationMessage = '';
+  String _verificationBarcode = '';
+  
+  // Additional getters for verification response
+  String get verificationMessage => _verificationMessage;
+  String get verificationBarcode => _verificationBarcode;
+  
   Future<bool> verifySerial({
+    required String serialNumber,  // Added scan number parameter
     required String name,
     required String mobile,
     required String item,
@@ -71,9 +79,12 @@ class ScanProvider extends ChangeNotifier {
   }) async {
     _setLoading(true);
     _clearMessages();
+    _verificationMessage = '';
+    _verificationBarcode = '';
 
     try {
-      final success = await _scanService.verifySerial(
+      final result = await _scanService.verifySerial(
+        serialNumber: serialNumber,  // Pass the scan number
         name: name,
         mobile: mobile,
         item: item,
@@ -85,16 +96,17 @@ class ScanProvider extends ChangeNotifier {
         image: image,
       );
 
-      if (success) {
-        _successMessage = 'Serial verification successful';
+      if (result['success'] == true) {
+        _successMessage = result['message'] ?? 'Serial verification successful';
+        _verificationMessage = result['message'] ?? 'Serial verification successful';
+        _verificationBarcode = result['barcode'] ?? serialNumber;
+        _setLoading(false);
+        return true;
+      } else {
+        _setError(result['message'] ?? 'Verification failed');
+        _setLoading(false);
+        return false;
       }
-
-      _setLoading(false);
-      return success;
-    } on ApiException catch (e) {
-      _setError(e.message);
-      _setLoading(false);
-      return false;
     } catch (e) {
       _setError('An unexpected error occurred');
       _setLoading(false);

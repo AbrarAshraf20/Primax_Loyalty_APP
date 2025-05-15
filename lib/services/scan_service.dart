@@ -22,13 +22,15 @@ class ScanService {
         return {
           'success': true,
           'message': response.data['message'] ?? 'Scan successful',
-          // 'pointsEarned': response.data['points'] ?? 0,
-          // 'totalPoints': response.data['total_points'] ?? 0,
+          'barcode': response.data['barcode'] ?? barcode,
+          'pointsEarned': response.data['points'] ?? 0,
+          'totalPoints': response.data['total_points'] ?? 0,
         };
       } else {
         return {
           'success': true,
           'message': 'Scan successful',
+          'barcode': barcode,
           'pointsEarned': 0,
           'totalPoints': 0,
         };
@@ -42,7 +44,8 @@ class ScanService {
   }
 
   // Verify serial number (this is for the VerifySerial screen in your project)
-  Future<bool> verifySerial({
+  Future<Map<String, dynamic>> verifySerial({
+    required String serialNumber,  // Added serial number parameter
     required String name,
     required String mobile,
     required String item,
@@ -52,17 +55,15 @@ class ScanService {
     required String customerAddress,
     required String remarks,
     required File image,
-    // You might need to add parameters for the uploaded pics of installation site
   }) async {
     try {
-      // Note: This endpoint isn't in your Postman collection,
-      // so we're creating a hypothetical implementation
       final response = await _apiClient.postFormData(
         '/verify-serial',
         fields: {
+          'barcode': serialNumber, // Include the scan number in the API call
           'name': name,
           'mobile': mobile,
-          'item': item,
+          'product_name': item,
           'city': city,
           'customer_name': customerName,
           'customer_contact_info': customerContactInfo,
@@ -70,12 +71,26 @@ class ScanService {
           'remarks': remarks,
         },
         files: [MapEntry('image', image)],
-        // You might need to add files parameter for installation site pictures
       );
 
-      return response.isSuccess;
-    } on ApiException {
-      rethrow;
+      if (response.isSuccess) {
+        // Return the entire response data to get the success message
+        return {
+          'success': true,
+          'message': response.data?['message'] ?? 'Verification successful',
+          'barcode': response.data?['barcode'] ?? serialNumber,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Verification failed',
+        };
+      }
+    } on ApiException catch (e) {
+      return {
+        'success': false,
+        'message': e.message,
+      };
     }
   }
 }

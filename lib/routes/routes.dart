@@ -54,7 +54,7 @@ class Routes {
     dashboard: (context) => DashboardScreen(),
     profile: (context) => UserProfileScreen(),
     scan: (context) =>  ScanScreen(),
-    verifySerial: (context) =>  VerifySerial(),
+    // verifySerial: (context) =>  VerifySerial(),
     rewards: (context) =>  RewardScreen(),
     luckyDraw: (context) => LuckyDrawScreen(),
     luckyDrawDetails: (context) => LuckyDrawDetailScreen(),

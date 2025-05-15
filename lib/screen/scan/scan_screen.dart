@@ -275,7 +275,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
             // Description
             const Text(
-              "Use Camera to scan Privex card & add Loyalty points to your account",
+              "Use Camera to scan Primax card & add Loyalty points to your account",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 15, color: Colors.black87),
             ),
@@ -325,20 +325,20 @@ class _ScanScreenState extends State<ScanScreen> {
             const SizedBox(height: 20),
 
             // Verify Serial link
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const VerifySerial(),
-                  ),
-                );
-              },
-              child: const Text(
-                "Need to verify a serial number?",
-                style: TextStyle(color: Colors.blue),
-              ),
-            ),
+            // TextButton(
+            //   onPressed: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(
+            //         builder: (context) =>  VerifySerial(scanNumber: _barcodeController.text,),
+            //       ),
+            //     );
+            //   },
+            //   child: const Text(
+            //     "Need to verify a serial number?",
+            //     style: TextStyle(color: Colors.blue),
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -457,15 +457,29 @@ class _ScanScreenState extends State<ScanScreen> {
     });
 
     if (success) {
-      // Show success dialog
-      _showSuccessDialog(context, scanProvider.lastPointsEarned);
+      // Get the user profile
+      final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+      final userRole = profileProvider.userProfile?.role?.toLowerCase() ?? '';
+
+      if (userRole == 'installer') {
+        // If user is an installer, navigate to verify serial screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VerifySerial(scanNumber: barcode),
+          ),
+        );
+      } else {
+        // For other users, show success dialog
+        _showSuccessDialog(context,scanProvider.lastPointsEarned,scanProvider.successMessage);
+      }
 
       // Clear the input
       _barcodeController.clear();
     }
   }
 
-  void _showSuccessDialog(BuildContext context, int pointsEarned) {
+  void _showSuccessDialog(BuildContext context,int pointsEarned, String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -509,6 +523,13 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                 Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 const Text(
                   "You Have Earned",
                   style: TextStyle(
