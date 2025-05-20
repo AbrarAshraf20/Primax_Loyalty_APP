@@ -7,8 +7,8 @@ import 'package:primax/core/providers/auth_provider.dart';
 import 'package:primax/core/providers/profile_provider.dart';
 import 'package:primax/routes/routes.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-
 import '../onboard_screen/onboard_screen.dart';
+import 'package:primax/screen/create_account_screen/create_account_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

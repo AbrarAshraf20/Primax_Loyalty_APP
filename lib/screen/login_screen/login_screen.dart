@@ -235,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () {
                     Navigator.pushNamed(
                       context,
-                      Routes.platform,
+                      Routes.register,
                     );
                   },
                   child: Text.rich(
@@ -252,59 +252,59 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Expanded(child: Divider(color:Colors.blueGrey,indent: 2,endIndent: 10,)),
-                  Text('Or'),
-                  Expanded(child: Divider(color: Colors.blueGrey,indent: 10,endIndent: 2,)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(40)
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        // Google login
-                      },
-                      icon: SvgPicture.asset('assets/icons/ic_google.svg'),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(40)
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        // Apple login
-                      },
-                      icon: SvgPicture.asset('assets/icons/ic_apple.svg'),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(40)
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        // Facebook login
-                      },
-                      icon: SvgPicture.asset('assets/icons/ic_facebook.svg'),
-                    ),
-                  ),
-                ],
-              ),
+              // const SizedBox(height: 30),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: const [
+              //     Expanded(child: Divider(color:Colors.blueGrey,indent: 2,endIndent: 10,)),
+              //     Text('Or'),
+              //     Expanded(child: Divider(color: Colors.blueGrey,indent: 10,endIndent: 2,)),
+              //   ],
+              // ),
+              // const SizedBox(height: 20),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: [
+              //     Container(
+              //       decoration: BoxDecoration(
+              //           color: AppColors.background,
+              //           borderRadius: BorderRadius.circular(40)
+              //       ),
+              //       child: IconButton(
+              //         onPressed: () {
+              //           // Google login
+              //         },
+              //         icon: SvgPicture.asset('assets/icons/ic_google.svg'),
+              //       ),
+              //     ),
+              //     SizedBox(width: 10),
+              //     Container(
+              //       decoration: BoxDecoration(
+              //           color: AppColors.background,
+              //           borderRadius: BorderRadius.circular(40)
+              //       ),
+              //       child: IconButton(
+              //         onPressed: () {
+              //           // Apple login
+              //         },
+              //         icon: SvgPicture.asset('assets/icons/ic_apple.svg'),
+              //       ),
+              //     ),
+              //     SizedBox(width: 10),
+              //     Container(
+              //       decoration: BoxDecoration(
+              //           color: AppColors.background,
+              //           borderRadius: BorderRadius.circular(40)
+              //       ),
+              //       child: IconButton(
+              //         onPressed: () {
+              //           // Facebook login
+              //         },
+              //         icon: SvgPicture.asset('assets/icons/ic_facebook.svg'),
+              //       ),
+              //     ),
+              //   ],
+              // ),
             ],
           ),
         ),

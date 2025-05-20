@@ -203,8 +203,9 @@ class AuthNavigationObserver extends NavigatorObserver {
       Routes.otp,
       Routes.forgotPassword,
       Routes.resetPassword,
-      Routes.platform,
+      // Routes.platform,
       Routes.register,
+      Routes.createAccount,
     ];
 
     if (publicRoutes.contains(routeName)) {

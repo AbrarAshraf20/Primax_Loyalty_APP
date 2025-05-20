@@ -119,10 +119,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
           backgroundColor: Colors.green,
           shape: const CircleBorder(),
-          child: SvgPicture.asset(
-            "assets/icons/ic_home.svg",
-            width: 28,
-            height: 28,
+          child: Image.asset(
+            "assets/images/app_home.png",
+            width: 50,
+            height: 50,
             color: Colors.white,
           ),
         ),

@@ -529,7 +529,7 @@ class UnifiedProductGrid extends StatelessWidget {
           mainAxisSpacing: 16,
           crossAxisSpacing: 16,
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(), // This is key for unified scrolling
+          physics: BouncingScrollPhysics(), // This is key for unified scrolling
           itemCount: filteredDocs?.length ?? 0,
           itemBuilder: (context, index) {
             var data = filteredDocs?[index].data() as Map<String, dynamic>;

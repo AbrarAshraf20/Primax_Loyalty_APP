@@ -279,39 +279,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ],
         ),
 
-      bottomNavigationBar: widget.data?['is_purchasable']? BottomAppBar(
-        color: Colors.white,
-        child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("Price", style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal)),
-                Text("PKR${widget.data?['price']}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-          Visibility(
-            visible:true,
-            child: Expanded(
-              child: CustomButton(
-                onPressed: () {
-                  // if(widget.data?['is_purchasable']) {
-
-                  // }else{
-                  //   toast("You can't purchase this product please try again later",length: Toast.LENGTH_LONG);
-                  // }
-                },
-                text: 'Add To Cart',
-              ),
-            ),
-          ),
-        ],
-            ),
-      ):SizedBox(),
       );
     }
   final FirebaseFirestore firestore = FirebaseFirestore.instance;

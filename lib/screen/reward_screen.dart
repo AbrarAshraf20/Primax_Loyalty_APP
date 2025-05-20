@@ -16,25 +16,15 @@ class RewardScreen extends StatefulWidget {
   _RewardScreenState createState() => _RewardScreenState();
 }
 
-class _RewardScreenState extends State<RewardScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
+class _RewardScreenState extends State<RewardScreen> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
 
     // Load rewards data when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
     });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -58,31 +48,9 @@ class _RewardScreenState extends State<RewardScreen>
             children: [
               _buildAppBar(),
 
-              // Tab bar
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: TabBar(
-                  controller: _tabController,
-                  indicatorColor: Colors.green,
-                  labelColor: Colors.green,
-                  unselectedLabelColor: Colors.grey,
-                  tabs: const [
-                    Tab(text: 'Club Rewards'),
-                    Tab(text: 'Featured Rewards'),
-                  ],
-                ),
-              ),
-
               // Tab content
               Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildClubRewardsTab(),
-                    _buildFeaturedRewardsTab(),
-                  ],
-                ),
+                child: _buildClubRewardsTab(),
               ),
             ],
           ),
@@ -123,7 +91,7 @@ class _RewardScreenState extends State<RewardScreen>
 
           // Title
           const Text(
-            'Rewards',
+            'Club Rewards',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
 
@@ -205,43 +173,6 @@ class _RewardScreenState extends State<RewardScreen>
     );
   }
 
-  Widget _buildFeaturedRewardsTab() {
-    return Consumer<RewardsProvider>(
-      builder: (context, rewardsProvider, _) {
-        if (rewardsProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (rewardsProvider.errorMessage.isNotEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Error: ${rewardsProvider.errorMessage}',
-                  style: const TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _loadData,
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (rewardsProvider.featuredRewards.isEmpty) {
-          return const Center(
-            child: Text('No featured rewards available at the moment.'),
-          );
-        }
-
-        return _buildRewardsList(rewardsProvider.featuredRewards);
-      },
-    );
-  }
 
   Widget _buildRewardsList(List<Reward> rewards) {
     return ListView.builder(

@@ -29,7 +29,7 @@ class Routes {
   static const String splash = '/';
   static const String login = '/login';
   static const String register = '/register';
-  static const String platform = '/platform';
+  // static const String platform = '/platform';
   static const String otp = '/otp';
   static const String home = '/home';
   static const String dashboard = '/dashboard';
@@ -44,6 +44,7 @@ class Routes {
   static const String forgotPassword = '/forgot-password';
   static const String resetPassword = '/reset-password';
   static const String setPassword = '/set-password';
+  static const String createAccount = '/create-account';
 
   // Route map
   static final Map<String, WidgetBuilder> routes = {
@@ -59,11 +60,12 @@ class Routes {
     luckyDraw: (context) => LuckyDrawScreen(),
     luckyDrawDetails: (context) => LuckyDrawDetailScreen(),
     donation: (context) => DonationScreen(),
-    platform: (context) => PlatformScreen(),
+    // platform: (context) => PlatformScreen(),
     pointsHistory: (context) =>  ClaimedPointsScreen(),
     forgotPassword: (context) => const ForgotPassword(),
     resetPassword: (context) => const ResetPassword(),
     setPassword: (context) => const SetPassword(),
+    createAccount: (context) => const CreateAccountScreen(),
   };
 
   // Navigation helper methods

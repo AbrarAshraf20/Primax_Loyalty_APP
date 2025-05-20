@@ -16,14 +16,15 @@ class CreateAccountScreen extends StatefulWidget {
   final String role; // Role: Installer, Dealer, or Distributor
 
   // Constructor now has an optional named parameter
-  const CreateAccountScreen({Key? key, required this.role}) : super(key: key);
+  const CreateAccountScreen({Key? key, this.role = "Installer Sign up"})
+      : super(key: key);
 
   // This static method allows us to create the screen from route arguments
   static CreateAccountScreen fromRouteSettings(RouteSettings settings) {
     // Extract and cast the arguments
     final args = settings.arguments as Map<String, dynamic>?;
     print('Route arguments: $args');    // Get role with fallback to default value if null
-    final role = args?['role'] as String? ?? 'User Sign up';
+    final role = args?['role'] as String? ?? 'Installer Sign up';
     return CreateAccountScreen(role: role);
   }
 
@@ -411,60 +412,60 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 ),
               ),
 
-              const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Expanded(child: Divider(color: Colors.blueGrey, indent: 2, endIndent: 10)),
-                  Text('Or'),
-                  Expanded(child: Divider(color: Colors.blueGrey, indent: 10, endIndent: 2)),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(40)
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        // Google login
-                      },
-                      icon: SvgPicture.asset('assets/icons/ic_google.svg'),
-                    ),
-                  ),
-                  SizedBox(width: 5),
-                  Container(
-                    decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(40)
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        // Apple login
-                      },
-                      icon: SvgPicture.asset('assets/icons/ic_apple.svg'),
-                    ),
-                  ),
-                  SizedBox(width: 5),
-                  Container(
-                    decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(40)
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        // Facebook login
-                      },
-                      icon: SvgPicture.asset('assets/icons/ic_facebook.svg'),
-                    ),
-                  ),
-                ],
-              ),
+              // const SizedBox(height: 30),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: const [
+              //     Expanded(child: Divider(color: Colors.blueGrey, indent: 2, endIndent: 10)),
+              //     Text('Or'),
+              //     Expanded(child: Divider(color: Colors.blueGrey, indent: 10, endIndent: 2)),
+              //   ],
+              // ),
+              //
+              // const SizedBox(height: 30),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: [
+              //     Container(
+              //       decoration: BoxDecoration(
+              //           color: AppColors.background,
+              //           borderRadius: BorderRadius.circular(40)
+              //       ),
+              //       child: IconButton(
+              //         onPressed: () {
+              //           // Google login
+              //         },
+              //         icon: SvgPicture.asset('assets/icons/ic_google.svg'),
+              //       ),
+              //     ),
+              //     SizedBox(width: 5),
+              //     Container(
+              //       decoration: BoxDecoration(
+              //           color: AppColors.background,
+              //           borderRadius: BorderRadius.circular(40)
+              //       ),
+              //       child: IconButton(
+              //         onPressed: () {
+              //           // Apple login
+              //         },
+              //         icon: SvgPicture.asset('assets/icons/ic_apple.svg'),
+              //       ),
+              //     ),
+              //     SizedBox(width: 5),
+              //     Container(
+              //       decoration: BoxDecoration(
+              //           color: AppColors.background,
+              //           borderRadius: BorderRadius.circular(40)
+              //       ),
+              //       child: IconButton(
+              //         onPressed: () {
+              //           // Facebook login
+              //         },
+              //         icon: SvgPicture.asset('assets/icons/ic_facebook.svg'),
+              //       ),
+              //     ),
+              //   ],
+              // ),
             ],
           ),
         ),
