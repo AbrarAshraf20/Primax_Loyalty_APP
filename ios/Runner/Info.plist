@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>primax_luck_draw_app</string>
+	<string>Primax loyalty</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -46,14 +46,47 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>This app needs camera access to scan barcodes and QR codes</string>
+	<string>This app requires camera access to scan QR codes and take profile pictures</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs photo library access to scan barcodes and QR codes from images</string>
+	<string>This app requires access to the photo library to select profile pictures</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to location only when selecting your current location on the map.</string>
+	<string>This app needs access to location to help you find nearby Primax stations and offers</string>
+	<!-- Fix for App Store rejection - Required -->
+	<key>NSMicrophoneUsageDescription</key>
+    <string>This permission may be required by some internal components but is not used by the app.</string>
+	<!-- Fix for App Store rejection - Recommended -->
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to location to help you find nearby Primax stations and offers even when the app is in the background</string>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
 	<key>GMSApiKey</key>
 	<string>AIzaSyDXCUC2HiimXAZ1kV25rT7wlmURbJUtE-o</string>
+		<key>NSAppTransportSecurity</key>
+    	<dict>
+    		<key>NSExceptionDomains</key>
+    		<dict>
+    			<key>primaxloyaltyprogram.com</key>
+    			<dict>
+    				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+    				<true/>
+    				<key>NSExceptionMinimumTLSVersion</key>
+    				<string>TLSv1.2</string>
+    				<key>NSExceptionRequiresForwardSecrecy</key>
+    				<true/>
+    				<key>NSIncludesSubdomains</key>
+    				<true/>
+    				<key>NSRequiresCertificateTransparency</key>
+    				<false/>
+    				<key>NSThirdPartyExceptionAllowsInsecureHTTPLoads</key>
+    				<false/>
+    				<key>NSThirdPartyExceptionMinimumTLSVersion</key>
+    				<string>TLSv1.2</string>
+    				<key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
+    				<true/>
+    			</dict>
+    		</dict>
+    	</dict>
+	<key>UIFileSharingEnabled</key>
+	<true/>
 </dict>
 </plist>
