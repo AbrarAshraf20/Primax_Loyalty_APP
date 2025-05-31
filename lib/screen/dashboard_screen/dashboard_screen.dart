@@ -156,7 +156,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       child: BottomAppBar(
-        height: 80,
+        height: 90,
         elevation: 0,
         color: Colors.white,
         shape: const CircularNotchedRectangle(),
