@@ -391,7 +391,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> with Widget
                     debugPrint('Error processing barcode: $e');
                   }
                 },
-                errorBuilder: (context, error, child) {
+                errorBuilder: (context, error) {
                   return Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
