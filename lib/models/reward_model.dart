@@ -3,6 +3,7 @@ class Reward {
   final int id;
   final String itemName;
   final String title;
+  final String? cashornot;
   final String priceInTokens;
   final String image;
   final String status;
@@ -16,6 +17,7 @@ class Reward {
     required this.id,
     required this.itemName,
     required this.title,
+    required this.cashornot,
     required this.priceInTokens,
     required this.image,
     required this.status,
@@ -31,6 +33,7 @@ class Reward {
       id: json['id'],
       itemName: json['item_name'],
       title: json['title'],
+      cashornot: json['cashornot'],
       priceInTokens: json['price_in_tokens'],
       image: json['image'],
       status: json['status'],
@@ -47,6 +50,7 @@ class Reward {
       'id': id,
       'item_name': itemName,
       'title': title,
+      'cashornot': cashornot,
       'price_in_tokens': priceInTokens,
       'image': image,
       'status': status,

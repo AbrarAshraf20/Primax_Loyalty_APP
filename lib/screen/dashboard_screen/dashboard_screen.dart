@@ -3,7 +3,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:primax/core/providers/profile_provider.dart';
 import 'package:primax/screen/donation_screen.dart';
-import 'package:primax/screen/luckdraw_screen.dart';
 import 'package:primax/screen/reward_screen.dart';
 import 'package:primax/screen/scan/scan_screen.dart';
 
@@ -18,17 +17,27 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 2; // Default selected item (Home)
 
-  final List<Widget> _pages = [
-    ScanScreen(),
-    RewardScreen(),
-    HomeScreen1(),
-    LuckyDrawScreen(),
-    DonationScreen(),
-  ];
+  late final List<Widget> _pages;
+
+  void _navigateToHome() {
+    setState(() {
+      _selectedIndex = 2;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    
+    // Initialize the pages list
+    _pages = [
+      ScanScreen(onBackPressed: _navigateToHome),
+      RewardScreen(onBackPressed: _navigateToHome),
+      HomeScreen1(),
+      LuckyDrawScreen(onBackPressed: _navigateToHome),
+      DonationScreen(onBackPressed: _navigateToHome),
+    ];
+    
     // Schedule the drawer data loading AFTER the first build is complete
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserData();
@@ -134,7 +143,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildBottomNavBar() {
     return Container(
-      height: 90, // Increased height to accommodate text
+      height: 100, // Increased height to accommodate text
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [

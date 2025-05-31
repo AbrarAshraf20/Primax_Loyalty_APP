@@ -18,7 +18,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  String appName = 'Primax';
+  String appName = 'Primax Loyalty';
   String appVersion = '';
 
   @override
@@ -86,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/images/app_logo.png', height: 200, width: 200),
+                Image.asset('assets/images/splash_logo.png', height: 200, width: 200),
                 const SizedBox(height: 20),
                 Text(
                   appName,

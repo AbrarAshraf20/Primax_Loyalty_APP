@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:primax/core/utils/app_config.dart';
+import 'package:primax/routes/routes.dart';
 import 'package:provider/provider.dart';
 import 'package:primax/core/providers/donation_provider.dart';
 import 'package:primax/core/providers/profile_provider.dart';
@@ -12,7 +13,9 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_snackbar.dart';
 
 class DonationScreen extends StatefulWidget {
-  const DonationScreen({Key? key}) : super(key: key);
+  final VoidCallback? onBackPressed;
+  
+  const DonationScreen({Key? key, this.onBackPressed}) : super(key: key);
 
   @override
   State<DonationScreen> createState() => _DonationScreenState();
@@ -64,9 +67,7 @@ class _DonationScreenState extends State<DonationScreen> {
                       ),
                       child: IconButton(
                         icon: Icon(CupertinoIcons.back,color: Colors.black,),
-                        onPressed: () {
-                          // Do nothing - let WillPopScope in parent dashboard handle back navigation
-                        },
+                        onPressed: widget.onBackPressed ?? () {},
                       ),
                     ),
                   ),

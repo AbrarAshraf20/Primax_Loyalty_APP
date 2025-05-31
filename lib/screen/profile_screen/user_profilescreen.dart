@@ -116,7 +116,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           ),
                           SizedBox(height: 6),
                           Container(
-                            width: 90,
                             padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -130,6 +129,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 SvgPicture.asset('assets/icons/Group2.svg'),
                                 SizedBox(width: 4),
@@ -177,11 +177,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                     : "User",
                                 Colors.red,
                               ),
-                              _buildStatusButton(
-                                SvgPicture.asset("assets/icons/qr_code.svg"),
-                                "QR Code",
-                                Colors.black,
-                              ),
+                              // _buildStatusButton(
+                              //   SvgPicture.asset("assets/icons/qr_code.svg"),
+                              //   "QR Code",
+                              //   Colors.black,
+                              // ),
                             ],
                           ),
                         ),
@@ -190,44 +190,44 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     SizedBox(height: 16),
 
                     // Notification Box
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFF00C853),
-                              const Color(0xFF00B0FF),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            SvgPicture.asset("assets/icons/notification.svg", color: Colors.white),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "New Messages",
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    "You get registration points - 300pts",
-                                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SvgPicture.asset("assets/icons/Vector.svg", color: Colors.white, height: 30),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
+                    // Padding(
+                    //   padding: EdgeInsets.symmetric(horizontal: 16),
+                    //   child: Container(
+                    //     padding: EdgeInsets.all(12),
+                    //     decoration: BoxDecoration(
+                    //       gradient: LinearGradient(
+                    //         colors: [
+                    //           const Color(0xFF00C853),
+                    //           const Color(0xFF00B0FF),
+                    //         ],
+                    //       ),
+                    //       borderRadius: BorderRadius.circular(8),
+                    //     ),
+                    //     child: Row(
+                    //       children: [
+                    //         SvgPicture.asset("assets/icons/notification.svg", color: Colors.white),
+                    //         SizedBox(width: 10),
+                    //         Expanded(
+                    //           child: Column(
+                    //             crossAxisAlignment: CrossAxisAlignment.start,
+                    //             children: [
+                    //               Text(
+                    //                 "New Messages",
+                    //                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    //               ),
+                    //               Text(
+                    //                 "You get registration points - 300pts",
+                    //                 style: TextStyle(color: Colors.white70, fontSize: 12),
+                    //               ),
+                    //             ],
+                    //           ),
+                    //         ),
+                    //         SvgPicture.asset("assets/icons/Vector.svg", color: Colors.white, height: 30),
+                    //       ],
+                    //     ),
+                    //   ),
+                    // ),
+                    // SizedBox(height: 16),
 
                     // Menu Items
                     _buildMenuItem("Personal Information", SvgPicture.asset("assets/icons/user.svg", color: Colors.black87), context, () {
@@ -257,7 +257,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       launchNewScreen(context, Routes.pointsHistory);
                       // Navigator.pushNamed(context, Routes.pointsHistory);
                     }),
-                    _buildMenuItemWithSwitch("Notifications", SvgPicture.asset("assets/icons/notification.svg", color: Colors.black87), context),
+                    _buildMenuItem("Rewards History", Icon(Icons.card_giftcard, color: Colors.black87), context, () {
+                      // Navigate to rewards history screen
+                      Navigator.pushNamed(context, Routes.rewardsHistory);
+                    }),
+                    // _buildMenuItemWithSwitch("Notifications", SvgPicture.asset("assets/icons/notification.svg", color: Colors.black87), context),
                     _buildMenuItem("Change Password", SvgPicture.asset("assets/icons/lock.svg", color: Colors.black87), context, () {
                       launchNewScreen(context, Routes.resetPassword);
 

@@ -11,7 +11,6 @@ import 'package:nb_utils/nb_utils.dart';
 
 import '../models/brand_model.dart';
 import 'drawer/drawer.dart';
-import 'login_screen/login_screen.dart';
 
 class HomeScreen1 extends StatefulWidget {
   @override
@@ -33,13 +32,6 @@ class _HomeScreen1State extends State<HomeScreen1> {
     await homeProvider.initialize();
   }
 
-  void _navigateToLogin() async {
-    // Navigate to login screen and clear the stack
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-          (route) => false,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,64 +59,8 @@ class _HomeScreen1State extends State<HomeScreen1> {
                 return Center(child: CircularProgressIndicator());
               }
 
-              // Handle unauthorized state
-              if (homeProvider.isUnauthorized) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.lock_outline,
-                        size: 64,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Text(
-                          'Your session has expired',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Text(
-                          'Please login again to continue',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _navigateToLogin,
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          backgroundColor: Colors.blue,
-                        ),
-                        child: Text(
-                          'Login Again',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
               // Regular error handling
-              if (homeProvider.errorMessage.isNotEmpty && !homeProvider.isUnauthorized) {
+              if (homeProvider.errorMessage.isNotEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

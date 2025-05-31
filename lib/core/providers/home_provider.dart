@@ -11,7 +11,6 @@ class HomeProvider extends ChangeNotifier {
   // State variables
   bool _isBrandsLoading = false;
   String _errorMessage = '';
-  bool _isUnauthorized = false;
   List<Brand> _brands = [];
   bool _isInitialized = false;
 
@@ -19,7 +18,6 @@ class HomeProvider extends ChangeNotifier {
   bool get isLoading => _isBrandsLoading;
   bool get isBrandsLoading => _isBrandsLoading;
   String get errorMessage => _errorMessage;
-  bool get isUnauthorized => _isUnauthorized;
   List<Brand> get brands => _brands;
 
   // Constructor
@@ -40,15 +38,8 @@ class HomeProvider extends ChangeNotifier {
 
     try {
       _brands = await _brandService.getBrands();
-      _isUnauthorized = false;
     } catch (e) {
       _setError('Failed to load brands: $e');
-      // Check if error is unauthorized
-      if (e.toString().toLowerCase().contains('unauthorized') ||
-          e.toString().toLowerCase().contains('401')) {
-        _isUnauthorized = true;
-        _setError('Your session has expired. Please login again.');
-      }
     } finally {
       _setBrandsLoading(false);
     }
@@ -72,6 +63,5 @@ class HomeProvider extends ChangeNotifier {
 
   void _clearError() {
     _errorMessage = '';
-    _isUnauthorized = false;
   }
 }

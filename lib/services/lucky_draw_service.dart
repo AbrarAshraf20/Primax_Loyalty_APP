@@ -30,13 +30,41 @@ class LuckyDrawService {
   }
 
   // Enter a lucky draw
-  Future<bool> enterLuckyDraw(int drawId) async {
+  Future<bool> enterLuckyDraw(int drawId, Map<String, String> paymentInfo, String cashornot) async {
     try {
+      // Prepare the body with draw ID and payment information
+      Map<String, dynamic> body = {
+        'lucky_draw_id': drawId,
+        'cash_or_non_cash': cashornot,
+      };
+
+      // Check if cash prize or non-cash prize
+      if (cashornot == "1") {
+        // Cash prize - send payment information
+        body['payment_method'] = paymentInfo['method'] ?? ''; // Easypase jazz cash
+        body['account_holder_name'] = paymentInfo['accountHolderName'] ?? ''; // Name of the account holder
+        body['account_number'] = paymentInfo['accountNumber'] ?? '';
+        body['person_name'] = '';
+        body['person_address'] = '';
+        body['person_phone'] = '';
+        
+        // Add bank name if payment method is bank account
+        if (paymentInfo['method'] == 'bankAccount' && paymentInfo.containsKey('bankName')) {
+          body['bank_name'] = paymentInfo['bankName']!;
+        }
+      } else {
+        // Non-cash prize - send delivery information
+        body['payment_method'] = '';
+        body['account_holder_name'] = '';
+        body['account_number'] = '';
+        body['person_name'] = paymentInfo['name'] ?? '';
+        body['person_address'] = paymentInfo['address'] ?? '';
+        body['person_phone'] = paymentInfo['contactNumber'] ?? '';
+      }
+
       final response = await _apiClient.post(
         '/enter-user',
-        body: {
-          'lucky_draw_id': drawId,
-        },
+        body: body,
         requiresAuth: true,
       );
 

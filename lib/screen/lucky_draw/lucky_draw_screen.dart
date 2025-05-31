@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:primax/core/providers/lucky_draw_provider.dart';
 import 'package:primax/core/providers/profile_provider.dart';
+import 'package:primax/core/utils/app_config.dart';
 import 'package:primax/models/lucky_draw.dart';
 import 'package:primax/routes/routes.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/network_status_indicator.dart';
 
 class LuckyDrawScreen extends StatefulWidget {
-  const LuckyDrawScreen({Key? key}) : super(key: key);
+  final VoidCallback? onBackPressed;
+  
+  const LuckyDrawScreen({Key? key, this.onBackPressed}) : super(key: key);
 
   @override
   _LuckyDrawScreenState createState() => _LuckyDrawScreenState();
@@ -100,10 +103,7 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                       ),
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back_ios, size: 16),
-                        onPressed: () {
-                          // Don't try to pop, just go back to home in parent Navigator
-                          // The WillPopScope in dashboard will handle it
-                        },
+                        onPressed: widget.onBackPressed ?? () {},
                       ),
                     ),
                   ),
@@ -182,8 +182,8 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
             // Image section - Using a placeholder since the API doesn't provide an image
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-              child: Image.asset(
-                'assets/images/Frame62.png', // Default image
+              child: Image.network(
+  "${AppConfig.imageBaseUrl}${draw.thumbnail}", // Default image
                 fit: BoxFit.cover,
                 height: 180,
                 width: double.infinity,
@@ -212,6 +212,13 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                         const SizedBox(height: 4),
                         Text(
                           'Points Required: ${draw.minimumPoints}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        Text(
+                          'Minimum Users: ${draw.minimumUsers}',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[700],
@@ -251,17 +258,17 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                         backgroundColor: const Color(0xffE9E9E9),
                         child: SvgPicture.asset('assets/icons/Vector.svg'),
                       ),
-                      if (draw.isActive)
-                        TextButton(
-                          onPressed: () {
-                            _showWinnerDialog(context);
-                          },
-                          child: const Text(
-                            'Show\nWinner',
-                            style: TextStyle(fontSize: 10, color: Colors.blue),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
+                      // if (draw.isActive)
+                        // TextButton(
+                        //   onPressed: () {
+                        //     _showWinnerDialog(context);
+                        //   },
+                        //   child: const Text(
+                        //     'Show\nWinner',
+                        //     style: TextStyle(fontSize: 10, color: Colors.blue),
+                        //     textAlign: TextAlign.center,
+                        //   ),
+                        // )
                     ],
                   ),
                 ],

@@ -563,31 +563,31 @@ class _VerifySerialState extends State<VerifySerial> {
                       'Verify Serial',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    Consumer<ScanProvider>(
-                      builder: (context, provider, _) {
-                        return Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                const Color(0xFF00C853), // Default green
-                                const Color(0xFF00B0FF), // Default blue
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.stars, color: Colors.white),
-                              SizedBox(width: 4),
-                              Text('160', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                            ],
-                          ),
-                        );
-                      },
-                    )
+                    // Consumer<ScanProvider>(
+                    //   builder: (context, provider, _) {
+                    //     return Container(
+                    //       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    //       decoration: BoxDecoration(
+                    //         gradient: LinearGradient(
+                    //           begin: Alignment.topCenter,
+                    //           end: Alignment.bottomCenter,
+                    //           colors: [
+                    //             const Color(0xFF00C853), // Default green
+                    //             const Color(0xFF00B0FF), // Default blue
+                    //           ],
+                    //         ),
+                    //         borderRadius: BorderRadius.circular(10),
+                    //       ),
+                    //       child: Row(
+                    //         children: [
+                    //           Icon(Icons.stars, color: Colors.white),
+                    //           SizedBox(width: 4),
+                    //           Text('160', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                    //         ],
+                    //       ),
+                    //     );
+                    //   },
+                    // )
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -608,7 +608,7 @@ class _VerifySerialState extends State<VerifySerial> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Scan Number', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text('Serial number of inverter', style: TextStyle(fontWeight: FontWeight.bold)),
                             Text(widget.scanNumber, style: TextStyle(fontSize: 16)),
                           ],
                         ),
@@ -639,11 +639,11 @@ class _VerifySerialState extends State<VerifySerial> {
               ),
               const SizedBox(height: 20),
 
-              Text('Item', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Text('Inverter Model', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
                 controller: _itemController,
-                hintText: 'Item',
+                hintText: 'Inverter Model',
                 hintStyle: TextStyle(color: Colors.grey),
                 suffix: IconButton(
                   icon: Icon(Icons.search, color: const Color(0xFF00B0FF)),
@@ -703,7 +703,7 @@ class _VerifySerialState extends State<VerifySerial> {
               ),
               const SizedBox(height: 20),
 
-              Text('Upload Pics of Installation Site', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Text('Upload Selfie with inverter', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               Container(
                 decoration: BoxDecoration(
@@ -723,7 +723,7 @@ class _VerifySerialState extends State<VerifySerial> {
                                 Expanded(child: Text('Image selected', overflow: TextOverflow.ellipsis)),
                               ],
                             )
-                          : Text('Select installation image', style: TextStyle(color: Colors.grey)),
+                          : Text('Upload Selfie with inverter', style: TextStyle(color: Colors.grey)),
                       ),
                     ),
                     InkWell(

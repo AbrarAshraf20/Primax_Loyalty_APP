@@ -7,6 +7,7 @@ import '../utils/app_config.dart';
 import 'api_exception.dart';
 import 'api_response.dart';
 import 'token_manager.dart';
+import 'network_interceptor.dart';
 
 class ApiClient {
   // Singleton pattern
@@ -60,10 +61,12 @@ class ApiClient {
       _log('🔷 API REQUEST [GET] $uri');
       if (queryParams != null) _log('Query Params: $queryParams');
 
-      final response = await http.get(
-        uri,
-        headers: headers,
-      ).timeout(Duration(seconds: timeoutSeconds));
+      final response = await NetworkInterceptor.interceptRequest(
+        () => http.get(
+          uri,
+          headers: headers,
+        ).timeout(Duration(seconds: timeoutSeconds)),
+      );
 
       _log('✅ API RESPONSE [GET] $uri → Status: ${response.statusCode}');
       _log('Response: ${response.body}');
@@ -99,11 +102,13 @@ class ApiClient {
       _log('🔷 API REQUEST [POST] $uri');
       if (body != null) _log('Body: $body');
 
-      final response = await http.post(
-        uri,
-        headers: headers,
-        body: encodedBody,
-      ).timeout(Duration(seconds: timeoutSeconds));
+      final response = await NetworkInterceptor.interceptRequest(
+        () => http.post(
+          uri,
+          headers: headers,
+          body: encodedBody,
+        ).timeout(Duration(seconds: timeoutSeconds)),
+      );
 
       _log('✅ API RESPONSE [POST] $uri → Status: ${response.statusCode}');
       _log('Response: ${response.body}');
@@ -167,6 +172,46 @@ class ApiClient {
           .timeout(Duration(seconds: timeoutSeconds));
 
       final response = await http.Response.fromStream(streamedResponse);
+      
+      // Check for 401 and handle re-authentication
+      if (response.statusCode == 401 && !NetworkInterceptor.isRetrying) {
+        // Use interceptor logic for multipart requests
+        final retryResponse = await NetworkInterceptor.interceptRequest(
+          () async {
+            // Recreate the request with updated headers
+            final retryHeaders = requiresAuth ? await _authHeaders : <String, String>{};
+            retryHeaders.remove('Content-Type');
+            
+            final retryRequest = http.MultipartRequest('POST', uri);
+            retryRequest.headers.addAll(retryHeaders);
+            retryRequest.fields.addAll(fields);
+            
+            // Re-add files
+            if (files != null) {
+              for (var fileEntry in files) {
+                final file = fileEntry.value;
+                final field = fileEntry.key;
+                final fileName = file.path.split('/').last;
+                
+                final multipartFile = await http.MultipartFile.fromPath(
+                  field,
+                  file.path,
+                  filename: fileName,
+                );
+                
+                retryRequest.files.add(multipartFile);
+              }
+            }
+            
+            final retryStreamedResponse = await retryRequest.send()
+                .timeout(Duration(seconds: timeoutSeconds));
+            
+            return await http.Response.fromStream(retryStreamedResponse);
+          },
+        );
+        
+        return _processResponse(retryResponse);
+      }
 
       _log('✅ API RESPONSE [POST FormData] $uri → Status: ${response.statusCode}');
       _log('Response: ${response.body}');
@@ -202,11 +247,13 @@ class ApiClient {
       _log('🔷 API REQUEST [PUT] $uri');
       if (body != null) _log('Body: $body');
 
-      final response = await http.put(
-        uri,
-        headers: headers,
-        body: encodedBody,
-      ).timeout(Duration(seconds: timeoutSeconds));
+      final response = await NetworkInterceptor.interceptRequest(
+        () => http.put(
+          uri,
+          headers: headers,
+          body: encodedBody,
+        ).timeout(Duration(seconds: timeoutSeconds)),
+      );
 
       _log('✅ API RESPONSE [PUT] $uri → Status: ${response.statusCode}');
       _log('Response: ${response.body}');
@@ -242,11 +289,13 @@ class ApiClient {
       _log('🔷 API REQUEST [DELETE] $uri');
       if (body != null) _log('Body: $body');
 
-      final response = await http.delete(
-        uri,
-        headers: headers,
-        body: encodedBody,
-      ).timeout(Duration(seconds: timeoutSeconds));
+      final response = await NetworkInterceptor.interceptRequest(
+        () => http.delete(
+          uri,
+          headers: headers,
+          body: encodedBody,
+        ).timeout(Duration(seconds: timeoutSeconds)),
+      );
 
       _log('✅ API RESPONSE [DELETE] $uri → Status: ${response.statusCode}');
       _log('Response: ${response.body}');

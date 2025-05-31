@@ -4,28 +4,49 @@ import 'dart:convert';
 import 'api_exception.dart';
 import 'token_manager.dart';
 import '../utils/app_config.dart';
+import '../../services/auth_service.dart';
+import '../di/service_locator.dart';
 
 /// Advanced interceptor for network requests
 /// Handles token refresh, request/response logging, and error transformation
 class NetworkInterceptor {
+  static bool _isRetrying = false;
+  
+  static bool get isRetrying => _isRetrying;
+  
   static Future<http.Response> interceptRequest(Future<http.Response> Function() requestFunction) async {
     try {
       // Execute the request
       final response = await requestFunction();
 
       // Check if token is expired (401 status)
-      if (response.statusCode == 401) {
-        // Try to refresh the token
+      if (response.statusCode == 401 && !_isRetrying) {
+        _isRetrying = true;
+        
+        // First try to refresh the token
         final refreshed = await _refreshToken();
 
         if (refreshed) {
           // Retry the original request with the new token
+          _isRetrying = false;
           return await requestFunction();
+        } else {
+          // If refresh failed, try auto-login with saved credentials
+          final autoLoginSuccess = await _tryAutoLogin();
+          
+          if (autoLoginSuccess) {
+            // Retry the original request with the new token
+            _isRetrying = false;
+            return await requestFunction();
+          }
         }
+        
+        _isRetrying = false;
       }
 
       return response;
     } catch (e) {
+      _isRetrying = false;
       // Transform generic errors into ApiExceptions
       if (e is! ApiException) {
         throw ApiException(message: 'Network error: ${e.toString()}');
@@ -62,6 +83,37 @@ class NetworkInterceptor {
 
       return false;
     } catch (e) {
+      return false;
+    }
+  }
+  
+  // Attempt to auto-login with saved credentials
+  static Future<bool> _tryAutoLogin() async {
+    try {
+      // Check if remember me is enabled and credentials are saved
+      final credentials = await TokenManager.getSavedCredentials();
+      if (credentials == null) {
+        return false;
+      }
+      
+      final identifier = credentials['identifier'];
+      final password = credentials['password'];
+      
+      if (identifier == null || password == null) {
+        return false;
+      }
+      
+      // Perform login using saved credentials
+      final authService = locator<AuthService>();
+      final user = await authService.login(
+        identifier: identifier,
+        password: password,
+        rememberMe: true,
+      );
+      
+      return user != null;
+    } catch (e) {
+      print('Auto-login failed: $e');
       return false;
     }
   }

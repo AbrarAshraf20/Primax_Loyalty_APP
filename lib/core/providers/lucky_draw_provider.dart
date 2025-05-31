@@ -43,12 +43,12 @@ class LuckyDrawProvider extends ChangeNotifier {
   }
 
   // Enter a lucky draw
-  Future<bool> enterLuckyDraw(int drawId) async {
+  Future<bool> enterLuckyDraw(int drawId, Map<String, String> paymentInfo, String cashornot) async {
     _setLoading(true);
     _clearErrors();
 
     try {
-      final success = await _luckyDrawService.enterLuckyDraw(drawId);
+      final success = await _luckyDrawService.enterLuckyDraw(drawId, paymentInfo, cashornot);
       _setLoading(false);
       return success;
     } on ApiException catch (e) {

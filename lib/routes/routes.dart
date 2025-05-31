@@ -14,7 +14,6 @@ import '../screen/login_screen/login_screen.dart';
 import '../screen/profile_screen/user_profilescreen.dart';
 import '../screen/scan/scan_screen.dart';
 import '../screen/reward_screen.dart';
-import '../screen/luckdraw_screen.dart';
 import '../screen/donation_screen.dart';
 import '../screen/dashboard_screen/dashboard_screen.dart';
 import '../screen/dashboard_screen/dashboard_screen.dart';
@@ -22,6 +21,7 @@ import '../screen/forgot_passowrd/forgot_password.dart';
 import '../screen/reset_password/reset_password.dart';
 import '../screen/reset_password/set_password.dart';
 import '../screen/homescreen.dart';
+import '../screen/rewards_history_screen.dart';
 
 // Define routes
 class Routes {
@@ -45,6 +45,7 @@ class Routes {
   static const String resetPassword = '/reset-password';
   static const String setPassword = '/set-password';
   static const String createAccount = '/create-account';
+  static const String rewardsHistory = '/rewards-history';
 
   // Route map
   static final Map<String, WidgetBuilder> routes = {
@@ -66,6 +67,7 @@ class Routes {
     resetPassword: (context) => const ResetPassword(),
     setPassword: (context) => const SetPassword(),
     createAccount: (context) => const CreateAccountScreen(),
+    rewardsHistory: (context) => const RewardsHistoryScreen(),
   };
 
   // Navigation helper methods

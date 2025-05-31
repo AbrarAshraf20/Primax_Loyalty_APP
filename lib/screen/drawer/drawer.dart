@@ -64,23 +64,23 @@ class CustomDrawer extends StatelessWidget {
                   Navigator.pushNamed(context, Routes.profile);
                 },
               ),
-              DrawerItem(
-                icon: SvgPicture.asset("assets/icons/Group_1.svg"),
-                text: "Message Center",
-                onTap: () {
-                  Navigator.pop(context);
-                  // Navigator.pushNamed(context, Routes.messageCenter);
-                },
-              ),
-              DrawerItem(
-                icon: SvgPicture.asset("assets/icons/Group_5.svg"),
-                text: "Claimed Point History",
-                onTap: () {
-                  Navigator.pop(context);
-
-                  Navigator.pushNamed(context, Routes.pointsHistory);
-                },
-              ),
+              // DrawerItem(
+              //   icon: SvgPicture.asset("assets/icons/Group_1.svg"),
+              //   text: "Message Center",
+              //   onTap: () {
+              //     Navigator.pop(context);
+              //     // Navigator.pushNamed(context, Routes.messageCenter);
+              //   },
+              // ),
+              // DrawerItem(
+              //   icon: SvgPicture.asset("assets/icons/Group_5.svg"),
+              //   text: "Claimed Point History",
+              //   onTap: () {
+              //     Navigator.pop(context);
+              //
+              //     Navigator.pushNamed(context, Routes.pointsHistory);
+              //   },
+              // ),
               Divider(indent: 35, endIndent: 25),
               DrawerItem(
                 icon: SvgPicture.asset("assets/icons/Group_2.svg"),
