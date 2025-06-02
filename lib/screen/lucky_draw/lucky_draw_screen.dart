@@ -146,6 +146,28 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
               ),
               const SizedBox(height: 20),
 
+              // Rules button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => _showLuckyDrawRules(context),
+                      icon: const Icon(Icons.info_outline, size: 18),
+                      label: const Text('Lucky Draw Rules'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               // Lucky draw list
               Expanded(
                 child: RefreshIndicator(
@@ -294,6 +316,58 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLuckyDrawRules(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Lucky Draw Rules & Conditions'),
+        content: const SingleChildScrollView(
+          child: Text(
+            'LUCKY DRAW RULES & CONDITIONS\n\n'
+            
+            '1. Minimum User Participation:\n'
+            'A lucky draw will only be activated once a minimum of users have successfully joined that particular draw campaign.\n\n'
+            
+            '2. Minimum Points Requirement:\n'
+            'To be eligible for entry, users must have at least 20,000 points collected through the platform\'s activities.\n\n'
+            
+            '3. Activation Timeline Post User Milestone:\n'
+            'Once the required number of users is reached, the lucky draw will be conducted exactly 2 months after that milestone.\n\n'
+            
+            '4. Multiple Entries:\n'
+            'Users may be allowed to enter a draw more than once, depending on admin approval. Admin has full rights to decide whether multiple entries are permitted or not for a specific draw.\n\n'
+            
+            '5. Ongoing Participation Until Draw Date:\n'
+            'Even after the user threshold is reached, new users can still participate and qualify until the actual draw date.\n\n'
+            
+            '6. Disqualification for Misuse:\n'
+            'Users found using fake accounts, bots, or other dishonest methods will be permanently disqualified from all current and future lucky draws.\n\n'
+            
+            '7. Winner Announcement:\n'
+            'Winners will be officially announced on the platform app within 24 hours after the draw takes place.\n\n'
+            
+            '8. Winner Verification Process:\n'
+            'All selected winners must complete an identity verification process. Failure to do so will result in disqualification and a new winner will be selected.\n\n'
+            
+            '9. Right to Modify or Cancel:\n'
+            'The organizers reserve the right to modify or cancel any rule, date, or draw without prior notice in case of unforeseen situations.\n\n'
+            
+            'APPLE DISCLAIMER:\n'
+            'Apple Inc. is not a sponsor of, and is not involved in any way with, this contest or sweepstakes. Apple Inc. is not responsible for the operation of this contest or sweepstakes or the selection of winners.\n\n'
+            
+            'By participating in the lucky draw, you agree to these terms and conditions.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
         ],
       ),

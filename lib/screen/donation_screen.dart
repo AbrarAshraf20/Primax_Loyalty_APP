@@ -11,6 +11,7 @@ import 'package:primax/services/connectivity_service.dart';
 import '../models/foundation.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_snackbar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DonationScreen extends StatefulWidget {
   final VoidCallback? onBackPressed;
@@ -436,50 +437,45 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
                       ),
                       const SizedBox(height: 25),
                       Container(
-                        width: 85,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF00C853), // Green
-                              Color(0xFF00B0FF), // Blue
-                            ],
-                          ),
+                          color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.blue.shade200),
                         ),
-                        child: Row(
+                        child: Column(
                           children: [
-                            SvgPicture.asset('assets/icons/Group2.svg'),
-                            const SizedBox(width: 4),
-                            Text(
-                              '$requiredPoints',
-                              style: const TextStyle(
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.blue.shade600,
+                              size: 24,
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Charity Information',
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Visit the official website to make secure donations',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 15),
-                      const Text('Points Required'),
                       const SizedBox(height: 25),
-                      // Donate button
+                      // Donate button - Redirect to external website
                       GestureDetector(
                         onTap: () {
-                          // Check if user has enough points
-                          final userPoints = profileProvider.userProfile?.tokens ?? 0;
-                          if (userPoints < requiredPoints) {
-                            // Use the new custom SnackBar that doesn't affect layout
-                            CustomSnackBar.showError(
-                              message: 'Not enough points to make a donation',
-                            );
-                            return;
-                          }
-                          _showDonationDialog(context, widget.foundation.id);
+                          _showExternalDonationDialog(context);
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -498,11 +494,11 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
                             ),
                             child: const Center(
                               child: Text(
-                                'Donate',
+                                'Visit Charity Website',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 20,
+                                  fontSize: 16,
                                 ),
                               ),
                             ),
@@ -530,178 +526,158 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
     }
   }
 
-  // Show donation dialog
-  void _showDonationDialog(BuildContext context, int foundationId) {
-    final donationProvider = Provider.of<DonationProvider>(context, listen: false);
-    final nameController = TextEditingController();
-    final messageController = TextEditingController();
-
+  // Show external donation dialog - Apple compliant
+  void _showExternalDonationDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF00C853), Color(0xFF00B0FF)],
+                    ),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Icon(
+                    Icons.volunteer_activism,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Title
+                const Text(
+                  "Support This Charity",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Description
+                Text(
+                  "To make a donation to ${widget.foundation.foundationName}, you'll be redirected to their official website where you can donate securely.",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                    height: 1.4,
+                  ),
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Apple Compliance Notice
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: const Text(
+                    "💡 This app does not process donations directly. All donations are handled by the charity's official website.",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Buttons
+                Row(
                   children: [
-                    // Close Button
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        icon: Image.asset(
-                          'assets/images/image120.png',
-                          width: 30,
-                          height: 30,
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ),
-
-                    // Title
-                    const Text(
-                      "Making Donation",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // Error message
-                    if (donationProvider.errorMessage.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          donationProvider.errorMessage,
-                          style: TextStyle(color: Colors.red.shade800),
-                        ),
-                      ),
-
-                    // Name Input
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Name (on behalf of)",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    TextField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        hintText: "Name here",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // Message Input
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Type Your Message",
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    TextField(
-                      controller: messageController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: "Type Your Message",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // Donation Amount
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset('assets/icons/Group2.svg'),
-                          const SizedBox(width: 5),
-                          Text(
-                            "$requiredPoints",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
                           ),
-                        ],
+                        ),
                       ),
                     ),
-
-                    const SizedBox(height: 15),
-
-                    // Donate Button
-                    CustomButton(
-                      text: donationProvider.isDonating ? 'Processing...' : 'Donate',
-                      isLoading: donationProvider.isDonating,
-                      onPressed: donationProvider.isDonating
-                          ? (){}
-                          : () async {
-                        if (nameController.text.isEmpty) {
-                          CustomSnackBar.showError(
-                            context: context,
-                            message: 'Please enter your name',
-                          );
-                          return;
-                        }
-
-                        final success = await donationProvider.makeDonation(
-                          foundationId: foundationId,
-                          amount: requiredPoints,
-                          name: nameController.text,
-                          message: messageController.text,
-                        );
-
-                        if (success) {
-                          // Close dialog
-                          Navigator.of(context).pop();
-
-                          // Show success message
-                          CustomSnackBar.showSuccess(
-                            context: context,
-                            message: donationProvider.successMessage,
-                          );
-                        }
-                      },
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _launchCharityWebsite(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00C853),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Visit Website',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
-              ),
-            );
-          },
+              ],
+            ),
+          ),
         );
       },
     );
+  }
+
+  // Launch charity website - Apple compliant external donation
+  Future<void> _launchCharityWebsite() async {
+    // Use the foundationLink from the foundation model
+    final String websiteUrl = widget.foundation.foundationLink.isNotEmpty 
+        ? widget.foundation.foundationLink 
+        : 'https://example-charity.org';
+    
+    try {
+      final Uri url = Uri.parse(websiteUrl);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication, // Opens in external browser
+        );
+        Navigator.pop(context); // Close the dialog after opening browser
+      } else {
+        CustomSnackBar.showError(
+          message: 'Unable to open charity website',
+        );
+      }
+    } catch (e) {
+      CustomSnackBar.showError(
+        message: 'Error opening website: ${e.toString()}',
+      );
+    }
   }
 }

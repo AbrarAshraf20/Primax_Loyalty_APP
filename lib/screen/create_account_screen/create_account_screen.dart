@@ -127,10 +127,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     final success = await authProvider.sendRegistrationOtp(
       name: _nameController.text,
       email: _emailController.text,
-      phoneNumber: _normalizePhoneNumber(_phoneController.text),
-      province: _provinceController.text,
-      city: _cityController.text,
-      cnic: _cnicController.text,
+      phoneNumber: _phoneController.text.isNotEmpty ? _normalizePhoneNumber(_phoneController.text) : 'None',
+      province: _provinceController.text.isNotEmpty ? _provinceController.text : 'None',
+      city: _cityController.text.isNotEmpty ? _cityController.text : 'None',
+      cnic: _cnicController.text.isNotEmpty ? _cnicController.text : 'None',
       shopNumber: _shopNumberController.text,
       role: widget.role.split(' ')[0], // Extract role name (e.g., "Installer" from "Installer Sign up")
       password: _passwordController.text,
@@ -209,7 +209,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               ),
 
               const SizedBox(height: 20),
-              Text('Phone Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Row(
+                children: [
+                  Text('Phone Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 8),
+                  Text('(Optional)', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                ],
+              ),
               const SizedBox(height: 5),
               CustomTextFormField(
                 controller: _phoneController,
@@ -217,17 +223,16 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 hintStyle: TextStyle(color: Colors.grey),
                 textInputType: TextInputType.phone,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
+                  // Phone number is now optional
+                  if (value != null && value.isNotEmpty) {
+                    // Remove any non-digit characters except '+'
+                    final cleanNumber = value.replaceAll(RegExp(r'[^\d+]'), '');
 
-                  // Remove any non-digit characters except '+'
-                  final cleanNumber = value.replaceAll(RegExp(r'[^\d+]'), '');
-
-                  // Pakistani phone number validation
-                  final RegExp pkPhoneRegex = RegExp(r'^(?:\+92|0092|0)?(3\d{2})(\d{7})$');
-                  if (!pkPhoneRegex.hasMatch(cleanNumber)) {
-                    return 'Enter a valid Pakistani mobile number (e.g., 03001234567)';
+                    // Pakistani phone number validation
+                    final RegExp pkPhoneRegex = RegExp(r'^(?:\+92|0092|0)?(3\d{2})(\d{7})$');
+                    if (!pkPhoneRegex.hasMatch(cleanNumber)) {
+                      return 'Enter a valid Pakistani mobile number (e.g., 03001234567)';
+                    }
                   }
 
                   return null;
@@ -237,7 +242,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               const SizedBox(height: 20),
               // Province dropdown with improved event handling
               SearchableDropdown(
-                label: 'Province',
+                label: 'Province (Optional)',
                 hintText: 'Select a province',
                 items: PakistanLocation.provinces,
                 controller: _provinceController,
@@ -253,9 +258,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   }
                 },
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select your province';
-                  }
+                  // Province is now optional
                   return null;
                 },
               ),
@@ -263,7 +266,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               const SizedBox(height: 20),
               // City dropdown with improved handling
               SearchableDropdown(
-                label: 'City',
+                label: 'City (Optional)',
                 hintText: _availableCities.isEmpty
                     ? 'First select a province'
                     : 'Select or enter a city',
@@ -276,24 +279,26 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 allowManualEntry: true,
                 isSearchable: true,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select or enter your city';
-                  }
+                  // City is now optional
                   return null;
                 },
               ),
 
               const SizedBox(height: 20),
-              Text('CNIC Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Row(
+                children: [
+                  Text('CNIC Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 8),
+                  Text('(Optional)', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                ],
+              ),
               const SizedBox(height: 5),
               CustomTextFormField(
                 controller: _cnicController,
                 hintText: 'CNIC Number',
                 hintStyle: TextStyle(color: Colors.grey),
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your CNIC number';
-                  }
+                  // CNIC is now optional
                   return null;
                 },
               ),

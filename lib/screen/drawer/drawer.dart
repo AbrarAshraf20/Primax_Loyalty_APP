@@ -127,6 +127,21 @@ class CustomDrawer extends StatelessWidget {
               ),
               Divider(indent: 35, endIndent: 25),
               DrawerItem(
+                icon: Icon(Icons.delete_forever, color: Colors.red),
+                text: "Delete Account",
+                color: Colors.red,
+                onTap: () {
+                  // Get auth provider BEFORE closing the drawer
+                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  
+                  // Close drawer first
+                  Navigator.pop(context);
+                  
+                  // Show account deletion confirmation dialog
+                  _showDeleteAccountDialog(context, authProvider);
+                },
+              ),
+              DrawerItem(
                 icon: SvgPicture.asset("assets/icons/Sign_Out.svg"),
                 text: "Sign Out",
                 color: Colors.red,
@@ -148,6 +163,18 @@ class CustomDrawer extends StatelessWidget {
     );
   }
   
+  // Account deletion confirmation dialog with detailed warning
+  void _showDeleteAccountDialog(BuildContext context, AuthProvider authProvider) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return _DeleteAccountDialog(authProvider: authProvider);
+      },
+    );
+  }
+
+
   // Simple confirmation dialog with pre-captured authProvider
   void _showSimpleLogoutDialog(BuildContext context, AuthProvider authProvider) {
     // Store navigator before showing dialog to ensure it's valid
@@ -221,5 +248,221 @@ class DrawerItem extends StatelessWidget {
         onTap: onTap,
       ),
     );
+  }
+}
+
+class _DeleteAccountDialog extends StatefulWidget {
+  final AuthProvider authProvider;
+
+  const _DeleteAccountDialog({required this.authProvider});
+
+  @override
+  _DeleteAccountDialogState createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.warning, color: Colors.red, size: 28),
+          SizedBox(width: 8),
+          Text(
+            'Delete Account',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: Text(
+                '⚠️ WARNING: This action cannot be undone!',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red[700],
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Deleting your account will permanently remove:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 8),
+            _buildWarningItem('• Your profile and personal information'),
+            _buildWarningItem('• All earned points and rewards'),
+            _buildWarningItem('• Lucky draw participation history'),
+            _buildWarningItem('• Transaction and claim history'),
+            _buildWarningItem('• Saved addresses and preferences'),
+            _buildWarningItem('• All app data associated with your account'),
+            SizedBox(height: 16),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Text(
+                'This action is irreversible. You will need to create a new account to use the app again.',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.orange[700],
+                ),
+              ),
+            ),
+            if (widget.authProvider.errorMessage.isNotEmpty) ...[
+              SizedBox(height: 16),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                ),
+                child: Text(
+                  widget.authProvider.errorMessage,
+                  style: TextStyle(
+                    color: Colors.red[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text('Cancel'),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextButton(
+            onPressed: widget.authProvider.isLoading ? null : () async {
+              await _handleDeleteAccount();
+            },
+            child: widget.authProvider.isLoading
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                : Text(
+                    'DELETE ACCOUNT',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWarningItem(String text) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 2),
+      child: Text(
+        text,
+        style: TextStyle(color: Colors.grey[700]),
+      ),
+    );
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    // Show final confirmation
+    bool finalConfirm = await _showFinalConfirmationDialog();
+    if (!finalConfirm) return;
+    
+    try {
+      final success = await widget.authProvider.deleteAccount();
+
+      if (!mounted) return;
+
+      if (success) {
+        // Close dialog first
+        Navigator.pop(context);
+        
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Account deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Navigate to login screen
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+          (route) => false,
+        );
+      } else {
+        // Error is already set in authProvider.errorMessage
+        setState(() {}); // Refresh to show error
+      }
+    } catch (e) {
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete account. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<bool> _showFinalConfirmationDialog() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Final Confirmation',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Are you absolutely sure you want to delete your account? This action cannot be undone.',
+            style: TextStyle(fontWeight: FontWeight.w500),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text('No, Keep Account'),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TextButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(
+                  'Yes, Delete Forever',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    ) ?? false;
   }
 }

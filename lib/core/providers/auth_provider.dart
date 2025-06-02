@@ -329,6 +329,35 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Delete account
+  Future<bool> deleteAccount() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final success = await _authService.deleteAccount();
+
+      if (success) {
+        _currentUser = null;
+        _isLoggedIn = false;
+        
+        // Clear all local data
+        await TokenManager.clearAll();
+      }
+
+      _setLoading(false);
+      return success;
+    } on ApiException catch (e) {
+      _setError(e.message);
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('An unexpected error occurred');
+      _setLoading(false);
+      return false;
+    }
+  }
+
   // // Reset password with token from email link
   // Future<bool> resetPasswordWithToken({
   //   required String email,

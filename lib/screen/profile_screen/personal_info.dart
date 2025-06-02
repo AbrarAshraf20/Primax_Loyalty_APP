@@ -255,14 +255,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                 const SizedBox(height: 16),
 
                                 _buildFormField(
-                                  label: 'Phone Number',
+                                  label: 'Phone Number (Optional)',
                                   controller: _phoneController,
                                   keyboardType: TextInputType.phone,
                                 ),
                                 const SizedBox(height: 16),
 
                                 _buildFormField(
-                                  label: 'CNIC Number',
+                                  label: 'CNIC Number (Optional)',
                                   controller: _cnicController,
                                 ),
                                 const SizedBox(height: 50),
@@ -339,7 +339,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       if (source == ImageSource.camera) {
         final status = await Permission.camera.request();
         if (!status.isGranted) {
-          _showSettingsDialog('Camera');
+          // Only show settings option if permission is permanently denied
+          if (status.isPermanentlyDenied) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Camera permission is required to take photos'),
+                action: SnackBarAction(
+                  label: 'Settings',
+                  onPressed: () => openAppSettings(),
+                ),
+              ),
+            );
+          }
           return;
         }
       }
@@ -414,37 +425,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     }
   }
 
-  // Dialog to guide user to settings
-  void _showSettingsDialog(String permissionType) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('$permissionType Access Needed'),
-        content: Text(
-          'To select images from your $permissionType, this app needs permission.\n\n'
-          'Please go to Settings and enable $permissionType permissions for this app.'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              openAppSettings();
-            },
-            child: const Text('Open Settings', 
-              style: TextStyle(
-                color: Color(0xFF00C853),
-                fontWeight: FontWeight.bold
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Dialog to guide user to settings - REMOVED per Apple guidelines
+  // This method is no longer used as we should not show pre-permission dialogs
 
   Widget _buildFormField({
     required String label,
@@ -455,8 +437,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     String fieldName = '';
     if (label == 'Full Name') fieldName = 'name';
     else if (label == 'Email') fieldName = 'email';
-    else if (label == 'Phone Number') fieldName = 'phone';
-    else if (label == 'CNIC Number') fieldName = 'cnic';
+    else if (label.contains('Phone Number')) fieldName = 'phone';
+    else if (label.contains('CNIC Number')) fieldName = 'cnic';
 
     // Get validation error from provider if it exists
     final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
@@ -495,9 +477,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               filled: true,
               fillColor: Colors.grey[50],
               // Add hint for phone number field
-              hintText: label == 'Phone Number' ? '+92, 0092, 03xx-xxxxxxx' : null,
+              hintText: label.contains('Phone Number') ? '+92, 0092, 03xx-xxxxxxx' : null,
               // Add prefix text for phone number field
-              prefixText: label == 'Phone Number' && !controller.text.startsWith('+') ? '+92 ' : null,
+              prefixText: label.contains('Phone Number') && !controller.text.startsWith('+') ? '+92 ' : null,
               prefixStyle: const TextStyle(color: Colors.grey),
               // Show error icon if server validation error exists
               suffixIcon: serverError != null
@@ -507,19 +489,24 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               errorText: serverError,
             ),
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'This field is required';
+              // Name and Email are required, Phone and CNIC are optional
+              if (label == 'Full Name' || label == 'Email') {
+                if (value == null || value.isEmpty) {
+                  return 'This field is required';
+                }
               }
 
-              // Client-side validation
-              if (keyboardType == TextInputType.emailAddress && !value.contains('@')) {
-                return 'Please enter a valid email';
-              }
+              // Client-side validation for non-empty values
+              if (value != null && value.isNotEmpty) {
+                if (keyboardType == TextInputType.emailAddress && !value.contains('@')) {
+                  return 'Please enter a valid email';
+                }
 
-              // Validate Pakistan phone number for phone field
-              if (keyboardType == TextInputType.phone) {
-                if (!_pakistanPhoneRegex.hasMatch(value)) {
-                  return 'Please enter a valid Pakistan mobile number';
+                // Validate Pakistan phone number for phone field only if value is provided
+                if (label.contains('Phone Number') && keyboardType == TextInputType.phone) {
+                  if (!_pakistanPhoneRegex.hasMatch(value)) {
+                    return 'Please enter a valid Pakistan mobile number';
+                  }
                 }
               }
 
@@ -588,19 +575,22 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         );
       }
 
-      // Normalize the phone number to +92 format
-      String normalizedPhone = normalizePhoneNumber(_phoneController.text);
-
-      // Perform additional validation on the normalized phone
-      if (!normalizedPhone.startsWith('+92') || normalizedPhone.length != 13) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please enter a valid Pakistani phone number in the format +92xxxxxxxxxx'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          )
-        );
-        return;
+      // Normalize the phone number to +92 format (only if not empty)
+      String normalizedPhone = _phoneController.text.trim();
+      if (normalizedPhone.isNotEmpty) {
+        normalizedPhone = normalizePhoneNumber(normalizedPhone);
+        
+        // Perform additional validation on the normalized phone
+        if (!normalizedPhone.startsWith('+92') || normalizedPhone.length != 13) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please enter a valid Pakistani phone number in the format +92xxxxxxxxxx'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            )
+          );
+          return;
+        }
       }
 
       final success = await profileProvider.updateProfile(

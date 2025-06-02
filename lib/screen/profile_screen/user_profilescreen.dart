@@ -12,6 +12,10 @@ import 'package:primax/core/providers/auth_provider.dart';
 import 'package:primax/routes/routes.dart';
 
 class UserProfileScreen extends StatefulWidget {
+  final VoidCallback? onBackPressed;
+  
+  const UserProfileScreen({Key? key, this.onBackPressed}) : super(key: key);
+  
   @override
   _UserProfileScreenState createState() => _UserProfileScreenState();
 }
@@ -64,7 +68,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             borderRadius: BorderRadius.circular(20),
                             elevation: 2,
                             child: InkWell(
-                              onTap: () => Navigator.pop(context),
+                              onTap: widget.onBackPressed ?? () => Navigator.pop(context),
                               child: Container(
                                 width: 40,
                                 height: 40,
