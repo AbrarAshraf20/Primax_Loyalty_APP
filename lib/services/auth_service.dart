@@ -63,19 +63,24 @@ class AuthService {
     required String password,
   }) async {
     try {
+      // Build request body with only non-empty optional fields
+      final body = <String, dynamic>{
+        'name': name,
+        'email': email,
+        'role': role,
+        'password': password,
+      };
+      
+      // Add optional fields only if they are not empty
+      if (phoneNumber.isNotEmpty) body['phone_number'] = phoneNumber;
+      if (province.isNotEmpty) body['province'] = province;
+      if (city.isNotEmpty) body['city'] = city;
+      if (cnic.isNotEmpty) body['cnic'] = cnic;
+      if (shopNumber.isNotEmpty) body['shop_number'] = shopNumber;
+      
       final response = await _apiClient.post(
         '/send-otp',
-        body: {
-          'name': name,
-          'email': email,
-          'phone_number': phoneNumber,
-          'province': province,
-          'city': city,
-          'cnic': cnic,
-          'shop_number': shopNumber,
-          'role': role,
-          'password': password,
-        },
+        body: body,
         requiresAuth: false,
       );
 

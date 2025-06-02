@@ -114,20 +114,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> with Widget
 
   Future<void> _checkPermission() async {
     try {
-      // Check camera permission directly instead of checking availability
-      final cameraStatus = await Permission.camera.status;
-      if (cameraStatus.isDenied || cameraStatus.isPermanentlyDenied) {
-        if (mounted) {
-          setState(() {
-            _permissionDenied = true;
-            _isInitialized = true;
-          });
-        }
-        debugPrint('Camera permission not available on this device');
-        return;
-      }
-
-      // Request permission
+      // Request permission directly without checking status first
       final status = await Permission.camera.request();
       if (mounted) {
         setState(() {
@@ -226,9 +213,9 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> with Widget
                 ),
                 const SizedBox(height: 30),
                 // Action button based on error type
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    if (_hasCameraError) {
+                if (_hasCameraError)
+                  ElevatedButton.icon(
+                    onPressed: () async {
                       // For camera errors, restart the controller
                       if (mounted) {
                         setState(() {
@@ -253,56 +240,49 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> with Widget
                           }
                         }
                       }
-                    } else {
-                      // For permission issues, open settings
-                      try {
-                        await openAppSettings();
-                      } catch (e) {
-                        debugPrint('Error opening app settings: $e');
-                        await _checkPermission();
-                      }
-                    }
-                  },
-                  icon: Icon(_hasCameraError ? Icons.refresh : Icons.settings),
-                  label: Text(_hasCameraError ? 'Try Again' : 'Open Settings'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00C853),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Secondary action button
-                OutlinedButton(
-                  onPressed: _hasCameraError
-                      ? () {
-                          // Go back if there's a camera error
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00C853),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                  )
+                else if (_permissionDenied)
+                  Column(
+                    children: [
+                      // Primary button to go to settings after permission was denied
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          try {
+                            await openAppSettings();
+                          } catch (e) {
+                            debugPrint('Error opening app settings: $e');
+                          }
+                        },
+                        icon: const Icon(Icons.settings),
+                        label: const Text('Open Settings'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF00C853),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Cancel button for when permission is denied
+                      OutlinedButton(
+                        onPressed: () {
                           if (Navigator.canPop(context)) {
                             Navigator.pop(context);
                           }
-                        }
-                      : () async {
-                          // Try permission check again if permission denied
-                          try {
-                            await _checkPermission();
-                          } catch (e) {
-                            debugPrint('Error checking permission: $e');
-                          }
                         },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF00C853)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF00C853)),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ],
                   ),
-                  child: Text(_hasCameraError ? 'Cancel' : 'Try Again'),
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () {
-                    if (Navigator.canPop(context)) {
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text('Go Back'),
-                ),
               ],
             ),
           ),

@@ -339,7 +339,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       if (source == ImageSource.camera) {
         final status = await Permission.camera.request();
         if (!status.isGranted) {
-          _showSettingsDialog('Camera');
+          // Only show settings option if permission is permanently denied
+          if (status.isPermanentlyDenied) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Camera permission is required to take photos'),
+                action: SnackBarAction(
+                  label: 'Settings',
+                  onPressed: () => openAppSettings(),
+                ),
+              ),
+            );
+          }
           return;
         }
       }
@@ -414,37 +425,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     }
   }
 
-  // Dialog to guide user to settings
-  void _showSettingsDialog(String permissionType) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('$permissionType Access Needed'),
-        content: Text(
-          'To select images from your $permissionType, this app needs permission.\n\n'
-          'Please go to Settings and enable $permissionType permissions for this app.'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              openAppSettings();
-            },
-            child: const Text('Open Settings', 
-              style: TextStyle(
-                color: Color(0xFF00C853),
-                fontWeight: FontWeight.bold
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Dialog to guide user to settings - REMOVED per Apple guidelines
+  // This method is no longer used as we should not show pre-permission dialogs
 
   Widget _buildFormField({
     required String label,

@@ -18,21 +18,21 @@ class _OnboardScreenState extends State<OnboardScreen> {
   final List<Map<String, String>> _onboardingData = [
     {
       'title': 'Loyalty Program',
-      'description': 'Smart, Gorgeous & Fashionable \n Collection ',
+      'description': 'Earn points with every purchase\n and unlock exclusive rewards',
 
 
       'image': 'assets/images/purple_gift.png'
     },
     {
       'title': 'Daily Rewards',
-      'description': 'There Are Many Beautiful And\n Attractive Plants To Your Room',
+      'description': 'Check in daily to collect bonus\n points and special prizes',
 
 
       'image': 'assets/images/Object_1.png'
     },
     {
       'title': 'Donations',
-      'description': 'Amet Minim Lit Nodeseru \n Nandu sit Alique Dolor',
+      'description': 'Make a difference by donating\n your points to worthy causes',
 
 
       'image': 'assets/images/transformed_1.png'
