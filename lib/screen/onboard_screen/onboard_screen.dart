@@ -30,13 +30,6 @@ class _OnboardScreenState extends State<OnboardScreen> {
 
       'image': 'assets/images/Object_1.png'
     },
-    {
-      'title': 'Donations',
-      'description': 'Make a difference by donating\n your points to worthy causes',
-
-
-      'image': 'assets/images/transformed_1.png'
-    },
   ];
 
   Future<void> _completeOnboarding() async {
