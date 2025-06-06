@@ -216,4 +216,29 @@ class AuthService {
     }
   }
 
+  // Reset password with token from email link
+  Future<bool> resetPasswordWithToken({
+    required String email,
+    required String token,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        '/api/save-new-password',
+        body: {
+          'email': email,
+          'token': token,
+          'new_password': newPassword,
+          'confirm_password': confirmPassword,
+        },
+        requiresAuth: false,
+      );
+
+      return response.isSuccess;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
 }

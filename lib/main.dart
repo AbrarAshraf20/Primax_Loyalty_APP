@@ -203,6 +203,7 @@ class AuthNavigationObserver extends NavigatorObserver {
       Routes.otp,
       Routes.forgotPassword,
       Routes.resetPassword,
+      Routes.resetPasswordFromLink,
       // Routes.platform,
       Routes.register,
       Routes.createAccount,
@@ -223,3 +224,4 @@ class AuthNavigationObserver extends NavigatorObserver {
     }
   }
 }
+

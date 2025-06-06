@@ -2,10 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:primax/screen/calaim_point_screen/claim_points_screen.dart';
 import 'package:primax/screen/create_account_screen/create_account_screen.dart';
-import 'package:primax/screen/platform_screen/platform_screen.dart';
 import 'package:primax/screen/lucky_draw/lucky_draw_detail_screen.dart';
 import 'package:primax/screen/lucky_draw/lucky_draw_screen.dart';
-import 'package:primax/screen/scan/veryfiyserial.dart';
 
 // Import screens
 import '../screen/login_screen/enter_otp.dart';
@@ -16,9 +14,9 @@ import '../screen/scan/scan_screen.dart';
 import '../screen/reward_screen.dart';
 import '../screen/donation_screen.dart';
 import '../screen/dashboard_screen/dashboard_screen.dart';
-import '../screen/dashboard_screen/dashboard_screen.dart';
 import '../screen/forgot_passowrd/forgot_password.dart';
 import '../screen/reset_password/reset_password.dart';
+import '../screen/reset_password/reset_password_from_link.dart';
 import '../screen/reset_password/set_password.dart';
 import '../screen/homescreen.dart';
 import '../screen/rewards_history_screen.dart';
@@ -43,6 +41,7 @@ class Routes {
   static const String pointsHistory = '/points-history';
   static const String forgotPassword = '/forgot-password';
   static const String resetPassword = '/reset-password';
+  static const String resetPasswordFromLink = '/reset-password-from-link';
   static const String setPassword = '/set-password';
   static const String createAccount = '/create-account';
   static const String rewardsHistory = '/rewards-history';
@@ -65,6 +64,7 @@ class Routes {
     pointsHistory: (context) =>  ClaimedPointsScreen(),
     forgotPassword: (context) => const ForgotPassword(),
     resetPassword: (context) => const ResetPassword(),
+    resetPasswordFromLink: (context) => const ResetPasswordFromLink(token: '', email: ''), // Default route, actual params come from deep link
     setPassword: (context) => const SetPassword(),
     createAccount: (context) => const CreateAccountScreen(),
     rewardsHistory: (context) => const RewardsHistoryScreen(),

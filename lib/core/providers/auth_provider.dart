@@ -358,34 +358,34 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // // Reset password with token from email link
-  // Future<bool> resetPasswordWithToken({
-  //   required String email,
-  //   required String token,
-  //   required String newPassword,
-  //   required String confirmPassword,
-  // }) async {
-  //   _setLoading(true);
-  //   _clearError();
-  //
-  //   try {
-  //     final success = await _authService.resetPasswordWithToken(
-  //       email: email,
-  //       token: token,
-  //       newPassword: newPassword,
-  //       confirmPassword: confirmPassword,
-  //     );
-  //
-  //     _setLoading(false);
-  //     return success;
-  //   } on ApiException catch (e) {
-  //     _setError(e.message);
-  //     _setLoading(false);
-  //     return false;
-  //   } catch (e) {
-  //     _setError('An unexpected error occurred');
-  //     _setLoading(false);
-  //     return false;
-  //   }
-  // }
+  // Reset password with token from email link
+  Future<bool> resetPasswordWithToken({
+    required String email,
+    required String token,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final success = await _authService.resetPasswordWithToken(
+        email: email,
+        token: token,
+        newPassword: newPassword,
+        confirmPassword: confirmPassword,
+      );
+
+      _setLoading(false);
+      return success;
+    } on ApiException catch (e) {
+      _setError(e.message);
+      _setLoading(false);
+      return false;
+    } catch (e) {
+      _setError('An unexpected error occurred');
+      _setLoading(false);
+      return false;
+    }
+  }
 }

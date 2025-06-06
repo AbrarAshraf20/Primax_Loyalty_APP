@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:primax/core/utils/app_config.dart';
-import 'package:primax/screen/calaim_point_screen/claim_points_screen.dart';
 import 'package:primax/screen/profile_screen/my_addresses.dart';
 import 'package:primax/screen/profile_screen/personal_info.dart';
 import 'package:provider/provider.dart';
@@ -21,14 +20,11 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
-  bool _isInitialized = false;
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Always load profile data when dependencies change (e.g., when returning from edit screen)
     _loadProfileData();
-    _isInitialized = true;
   }
 
   // Fetch drawer data when screen loads
@@ -297,6 +293,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         }
                       },
                     ),
+                    ListTile(
+                      leading: Icon(Icons.delete_forever, color: Colors.red),
+                      title: Text("Delete Account", style: TextStyle(color: Colors.red)),
+                      onTap: () async {
+                        // Show confirmation dialog
+                        final shouldDelete = await _showDeleteAccountConfirmationDialog(context);
+
+                        if (shouldDelete == true) {
+                          // Delete account
+                          await _deleteAccount(authProvider);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -333,31 +342,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  Widget _buildMenuItemWithSwitch(String title, Widget icon, BuildContext context) {
-    return StatefulBuilder(
-      builder: (context, setState) {
-        bool isNotificationsEnabled = true; // This would come from a provider in a real app
-
-        return ListTile(
-          leading: icon,
-          title: Text(
-            title,
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-          ),
-          trailing: Switch(
-            value: isNotificationsEnabled,
-            activeTrackColor: Colors.blue,
-            onChanged: (value) {
-              setState(() {
-                isNotificationsEnabled = value;
-                // Update notification settings in the backend
-              });
-            },
-          ),
-        );
-      },
-    );
-  }
 
   Future<bool?> _showLogoutConfirmationDialog(BuildContext context) {
     return showDialog<bool>(
@@ -377,5 +361,115 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         ],
       ),
     );
+  }
+
+  Future<bool?> _showDeleteAccountConfirmationDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Account'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to permanently delete your account?',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Text('This action cannot be undone and will:'),
+            SizedBox(height: 8),
+            Text('• Delete all your personal information'),
+            Text('• Remove all your points and rewards'),
+            Text('• Cancel any pending claims'),
+            Text('• Remove access to the app'),
+            SizedBox(height: 16),
+            Text(
+              'If you\'re experiencing issues, please contact support instead.',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Delete Account', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteAccount(AuthProvider authProvider) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Deleting account...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    try {
+      final success = await authProvider.deleteAccount();
+      
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      if (success) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Account deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Navigate to login screen and clear all routes
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          Routes.login,
+          (route) => false,
+        );
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.errorMessage.isNotEmpty 
+                ? authProvider.errorMessage 
+                : 'Failed to delete account. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      Navigator.of(context).pop();
+      
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

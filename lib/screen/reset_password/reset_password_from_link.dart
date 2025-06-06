@@ -8,37 +8,32 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text__form_field.dart';
 import '../login_screen/login_screen.dart';
 
-class ResetPassword extends StatefulWidget {
-  final String? token;
-  final String? email;
-  final bool fromDeepLink;
+class ResetPasswordFromLink extends StatefulWidget {
+  final String token;
+  final String email;
   
-  const ResetPassword({
+  const ResetPasswordFromLink({
     Key? key,
-    this.token,
-    this.email,
-    this.fromDeepLink = false,
+    required this.token,
+    required this.email,
   }) : super(key: key);
 
   @override
-  State<ResetPassword> createState() => _ResetPasswordState();
+  State<ResetPasswordFromLink> createState() => _ResetPasswordFromLinkState();
 }
 
-class _ResetPasswordState extends State<ResetPassword> {
+class _ResetPasswordFromLinkState extends State<ResetPasswordFromLink> {
   final _formKey = GlobalKey<FormState>();
 
   // Text controllers for form fields
-  final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  bool _oldPasswordVisible = false;
   bool _newPasswordVisible = false;
   bool _confirmPasswordVisible = false;
 
   @override
   void dispose() {
-    _oldPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -52,18 +47,18 @@ class _ResetPasswordState extends State<ResetPassword> {
     }
 
     // Get form values
-    final oldPassword = _oldPasswordController.text.trim();
     final newPassword = _newPasswordController.text.trim();
-    final reEnterNewPassword = _confirmPasswordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
 
     // Get auth provider
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Call reset password function
-    final success = await authProvider.resetPassword(
-      oldPassword: oldPassword,
+    // Call reset password function with token
+    final success = await authProvider.resetPasswordWithToken(
+      email: widget.email,
+      token: widget.token,
       newPassword: newPassword,
-      reEnterNewPassword: reEnterNewPassword,
+      confirmPassword: confirmPassword,
     );
 
     if (success) {
@@ -75,7 +70,7 @@ class _ResetPasswordState extends State<ResetPassword> {
         ),
       );
 
-      // Navigate back to login screen after a short delay
+      // Navigate to login screen after a short delay
       Future.delayed(const Duration(seconds: 2), () {
         LoginScreen().launch(context, isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
       });
@@ -89,20 +84,54 @@ class _ResetPasswordState extends State<ResetPassword> {
     // Access the auth provider
     final authProvider = Provider.of<AuthProvider>(context);
 
+    // If token or email is empty, show error screen
+    if (widget.token.isEmpty || widget.email.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Reset Password'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.red),
+              SizedBox(height: 16),
+              Text(
+                'Invalid Reset Link',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'This reset password link is invalid or has expired.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/login',
+                    (route) => false,
+                  );
+                },
+                child: Text('Back to Login'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: BackButton(color: Colors.black),
-        title: Text('Reset Password', style: TextStyle(color: Colors.black)),
-      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 50),
               const Text(
                 'Reset Password',
                 style: TextStyle(
@@ -111,8 +140,8 @@ class _ResetPasswordState extends State<ResetPassword> {
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                'Reset password for your account',
+              Text(
+                'Set a new password for ${widget.email}',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey,
@@ -142,32 +171,8 @@ class _ResetPasswordState extends State<ResetPassword> {
                   ),
                 ),
 
-              // Old Password Field
-              const SizedBox(height: 30),
-              Text('Current Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 5),
-              CustomTextFormField(
-                controller: _oldPasswordController,
-                obscureText: !_oldPasswordVisible,
-                hintText: 'Enter current password',
-                hintStyle: TextStyle(color: Colors.grey),
-                suffix: IconButton(
-                  icon: Icon(
-                    _oldPasswordVisible ? CupertinoIcons.eye : CupertinoIcons.eye_slash,
-                    color: Colors.black,
-                  ),
-                  onPressed: () => setState(() => _oldPasswordVisible = !_oldPasswordVisible),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your current password';
-                  }
-                  return null;
-                },
-              ),
-
               // New Password Field
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
               Text('New Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 5),
               CustomTextFormField(
@@ -195,7 +200,7 @@ class _ResetPasswordState extends State<ResetPassword> {
 
               // Confirm New Password Field
               const SizedBox(height: 20),
-              Text('Re-enter New Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text('Confirm New Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 5),
               CustomTextFormField(
                 controller: _confirmPasswordController,
@@ -229,13 +234,26 @@ class _ResetPasswordState extends State<ResetPassword> {
                 isLoading: authProvider.isLoading,
               ),
 
-              // Helper text
-              const SizedBox(height: 16),
+              // Back to login link
+              const SizedBox(height: 30),
               Center(
-                child: Text(
-                  'After resetting your password, you will need to login again.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                child: InkWell(
+                  onTap: () {
+                    LoginScreen().launch(context,
+                        pageRouteAnimation: PageRouteAnimation.Slide);
+                  },
+                  child: Text.rich(
+                    TextSpan(
+                      text: "Remember your password? ",
+                      style: const TextStyle(color: Colors.grey),
+                      children: [
+                        TextSpan(
+                          text: 'Login',
+                          style: const TextStyle(color: Colors.blue),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
