@@ -54,6 +54,8 @@ class ScanService {
     required String customerContactInfo,
     required String customerAddress,
     required String remarks,
+    required String cnic,
+    required String serialNum,
     required File image,
   }) async {
     try {
@@ -69,6 +71,8 @@ class ScanService {
           'customer_contact_info': customerContactInfo,
           'customer_address': customerAddress,
           'remarks': remarks,
+          'cnic': cnic,
+          'serial_num': serialNum,
         },
         files: [MapEntry('image', image)],
       );

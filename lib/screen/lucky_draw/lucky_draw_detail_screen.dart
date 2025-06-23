@@ -9,8 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../../widgets/network_status_indicator.dart';
 import '../../widgets/custom_snackbar.dart';
-import '../../widgets/payment_method_selection.dart';
-import '../../widgets/delivery_info_form.dart';
+import '../../widgets/contact_info_form.dart';
 
 class LuckyDrawDetailScreen extends StatefulWidget {
   const LuckyDrawDetailScreen({Key? key}) : super(key: key);
@@ -416,11 +415,9 @@ class _LuckyDrawDetailScreenState extends State<LuckyDrawDetailScreen> {
 
                     const SizedBox(height: 10),
 
-                    Text(
-                      draw.cashornot == "1"
-                          ? 'Please provide your payment information to participate in the lucky draw.'
-                          : 'Please provide your delivery information to participate in the lucky draw.',
-                      style: const TextStyle(
+                    const Text(
+                      'Please provide your contact information to participate in the lucky draw.',
+                      style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey,
                       ),
@@ -428,32 +425,17 @@ class _LuckyDrawDetailScreenState extends State<LuckyDrawDetailScreen> {
 
                     const SizedBox(height: 30),
 
-                    // Show different forms based on cashornot value
-                    if (draw.cashornot == "1") ...[
-                      // Cash prize - show payment method selection
-                      PaymentMethodSelection(
-                        onPaymentInfoChanged: (info) {
-                          setState(() {
-                            paymentInfo = info;
-                          });
-                        },
-                        onTermsPressed: () {
-                          _showTermsAndConditions();
-                        },
-                      ),
-                    ] else ...[
-                      // Non-cash prize - show delivery info form
-                      DeliveryInfoForm(
-                        onDeliveryInfoChanged: (info) {
-                          setState(() {
-                            paymentInfo = info;
-                          });
-                        },
-                        onTermsPressed: () {
-                          _showTermsAndConditions();
-                        },
-                      ),
-                    ],
+                    // Show contact info form for all cases
+                    ContactInfoForm(
+                      onContactInfoChanged: (info) {
+                        setState(() {
+                          paymentInfo = info;
+                        });
+                      },
+                      onTermsPressed: () {
+                        _showTermsAndConditions();
+                      },
+                    ),
 
                     const SizedBox(height: 30),
 

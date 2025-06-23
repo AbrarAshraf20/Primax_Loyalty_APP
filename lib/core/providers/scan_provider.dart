@@ -75,6 +75,8 @@ class ScanProvider extends ChangeNotifier {
     required String customerContactInfo,
     required String customerAddress,
     required String remarks,
+    required String cnic,
+    required String serialNum,
     required File image,
   }) async {
     _setLoading(true);
@@ -93,6 +95,8 @@ class ScanProvider extends ChangeNotifier {
         customerContactInfo: customerContactInfo,
         customerAddress: customerAddress,
         remarks: remarks,
+        cnic: cnic,
+        serialNum: serialNum,
         image: image,
       );
 

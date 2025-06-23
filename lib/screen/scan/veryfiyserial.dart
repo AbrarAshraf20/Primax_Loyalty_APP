@@ -249,6 +249,8 @@ class _VerifySerialState extends State<VerifySerial> {
   final TextEditingController _customerContactController = TextEditingController();
   final TextEditingController _customerAddressController = TextEditingController();
   final TextEditingController _remarksController = TextEditingController();
+  final TextEditingController _cnicController = TextEditingController();
+  final TextEditingController _serialNumController = TextEditingController();
   
   @override
   void dispose() {
@@ -260,6 +262,8 @@ class _VerifySerialState extends State<VerifySerial> {
     _customerContactController.dispose();
     _customerAddressController.dispose();
     _remarksController.dispose();
+    _cnicController.dispose();
+    _serialNumController.dispose();
     super.dispose();
   }
   
@@ -413,6 +417,8 @@ class _VerifySerialState extends State<VerifySerial> {
         customerContactInfo: _customerContactController.text,
         customerAddress: _customerAddressController.text,
         remarks: _remarksController.text,
+        cnic: _cnicController.text,
+        serialNum: _serialNumController.text,
         image: _selectedImage!,
       );
       
@@ -617,6 +623,38 @@ class _VerifySerialState extends State<VerifySerial> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+              Text('CNIC Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 5),
+              CustomTextFormField(
+                controller: _cnicController,
+                hintText: 'CNIC Number (e.g., 12345-1234567-1)',
+                hintStyle: TextStyle(color: Colors.grey),
+                textInputType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter CNIC number';
+                  }
+                  // Basic CNIC validation (13 digits with or without dashes)
+                  String cnicPattern = r'^[0-9]{5}-?[0-9]{7}-?[0-9]{1}$';
+                  RegExp regExp = RegExp(cnicPattern);
+                  if (!regExp.hasMatch(value.replaceAll('-', '').replaceAll(' ', ''))) {
+                    return 'Please enter a valid CNIC number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+
+              Text('Serial Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 5),
+              CustomTextFormField(
+                controller: _serialNumController,
+                hintText: 'Serial Number',
+                hintStyle: TextStyle(color: Colors.grey),
+                validator: (value) => value == null || value.isEmpty ? 'Please enter serial number' : null,
+              ),
+              const SizedBox(height: 20),
 
               Text('Name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),

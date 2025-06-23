@@ -7,27 +7,46 @@ class PaymentMethodSelection extends StatefulWidget {
   final Function(Map<String, String>?) onPaymentInfoChanged;
   final bool showTermsConditions;
   final VoidCallback? onTermsPressed;
+  final Function(Function())? onValidationReady;
 
   const PaymentMethodSelection({
     Key? key,
     required this.onPaymentInfoChanged,
     this.showTermsConditions = true,
     this.onTermsPressed,
+    this.onValidationReady,
   }) : super(key: key);
 
   @override
-  _PaymentMethodSelectionState createState() => _PaymentMethodSelectionState();
+  PaymentMethodSelectionState createState() => PaymentMethodSelectionState();
 }
 
-class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
+class PaymentMethodSelectionState extends State<PaymentMethodSelection> {
   PaymentMethod? _selectedMethod;
   bool _agreeToTerms = false;
+  bool _showValidationErrors = false;
   
   // Controllers for form fields
   final _accountHolderController = TextEditingController();
   final _accountNumberController = TextEditingController();
   final _bankNameController = TextEditingController();
+  
+  // Validation errors
+  String? _accountHolderError;
+  String? _accountNumberError;
+  String? _bankNameError;
+  String? _methodError;
+  String? _termsError;
 
+  @override
+  void initState() {
+    super.initState();
+    // Provide the validation function to parent after frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onValidationReady?.call(validateFields);
+    });
+  }
+  
   @override
   void dispose() {
     _accountHolderController.dispose();
@@ -37,30 +56,96 @@ class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
   }
 
   void _updatePaymentInfo() {
-    if (_selectedMethod == null || !_agreeToTerms) {
+    if (!_showValidationErrors) {
+      // Only validate silently when not showing errors
+      if (_selectedMethod == null || !_agreeToTerms) {
+        widget.onPaymentInfoChanged(null);
+        return;
+      }
+
+      Map<String, String> paymentInfo = {
+        'method': _selectedMethod!.name,
+        'accountHolderName': _accountHolderController.text.trim(),
+        'accountNumber': _accountNumberController.text.trim(),
+      };
+
+      if (_selectedMethod == PaymentMethod.bankAccount) {
+        paymentInfo['bankName'] = _bankNameController.text.trim();
+      }
+
+      // Check if all required fields are filled
+      if (paymentInfo['accountHolderName']!.isEmpty || 
+          paymentInfo['accountNumber']!.isEmpty ||
+          (_selectedMethod == PaymentMethod.bankAccount && paymentInfo['bankName']!.isEmpty)) {
+        widget.onPaymentInfoChanged(null);
+        return;
+      }
+
+      widget.onPaymentInfoChanged(paymentInfo);
+    }
+  }
+  
+  bool validateFields() {
+    setState(() {
+      _showValidationErrors = true;
+      _methodError = null;
+      _accountHolderError = null;
+      _accountNumberError = null;
+      _bankNameError = null;
+      _termsError = null;
+    });
+    
+    bool isValid = true;
+    
+    // Validate method selection
+    if (_selectedMethod == null) {
+      _methodError = 'Please select a payment method';
+      isValid = false;
+    }
+    
+    // Validate account holder name
+    if (_accountHolderController.text.trim().isEmpty) {
+      _accountHolderError = 'Account holder name is required';
+      isValid = false;
+    }
+    
+    // Validate account number
+    if (_accountNumberController.text.trim().isEmpty) {
+      _accountNumberError = 'Account number is required';
+      isValid = false;
+    }
+    
+    // Validate bank name for bank account
+    if (_selectedMethod == PaymentMethod.bankAccount && _bankNameController.text.trim().isEmpty) {
+      _bankNameError = 'Bank name is required';
+      isValid = false;
+    }
+    
+    // Validate terms agreement
+    if (!_agreeToTerms) {
+      _termsError = 'Please agree to terms and conditions';
+      isValid = false;
+    }
+    
+    setState(() {});
+    
+    if (isValid) {
+      Map<String, String> paymentInfo = {
+        'method': _selectedMethod!.name,
+        'accountHolderName': _accountHolderController.text.trim(),
+        'accountNumber': _accountNumberController.text.trim(),
+      };
+
+      if (_selectedMethod == PaymentMethod.bankAccount) {
+        paymentInfo['bankName'] = _bankNameController.text.trim();
+      }
+      
+      widget.onPaymentInfoChanged(paymentInfo);
+    } else {
       widget.onPaymentInfoChanged(null);
-      return;
     }
-
-    Map<String, String> paymentInfo = {
-      'method': _selectedMethod!.name,
-      'accountHolderName': _accountHolderController.text.trim(),
-      'accountNumber': _accountNumberController.text.trim(),
-    };
-
-    if (_selectedMethod == PaymentMethod.bankAccount) {
-      paymentInfo['bankName'] = _bankNameController.text.trim();
-    }
-
-    // Check if all required fields are filled
-    if (paymentInfo['accountHolderName']!.isEmpty || 
-        paymentInfo['accountNumber']!.isEmpty ||
-        (_selectedMethod == PaymentMethod.bankAccount && paymentInfo['bankName']!.isEmpty)) {
-      widget.onPaymentInfoChanged(null);
-      return;
-    }
-
-    widget.onPaymentInfoChanged(paymentInfo);
+    
+    return isValid;
   }
 
   @override
@@ -90,6 +175,23 @@ class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
           ),
           const SizedBox(height: 20),
 
+          // Method selection error
+          if (_showValidationErrors && _methodError != null) ...[
+            Container(
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade100,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.red.shade300),
+              ),
+              child: Text(
+                _methodError!,
+                style: TextStyle(color: Colors.red.shade800, fontSize: 12),
+              ),
+            ),
+          ],
+          
           // Payment method options
           _buildPaymentMethodOption(
             PaymentMethod.jazzCash,
@@ -218,6 +320,7 @@ class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
             controller: _bankNameController,
             hintText: 'Enter bank name',
             keyboardType: TextInputType.text,
+            errorText: _showValidationErrors ? _bankNameError : null,
           ),
           const SizedBox(height: 16),
         ],
@@ -228,6 +331,7 @@ class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
           controller: _accountHolderController,
           hintText: 'Enter account holder name',
           keyboardType: TextInputType.text,
+          errorText: _showValidationErrors ? _accountHolderError : null,
         ),
         const SizedBox(height: 16),
 
@@ -238,6 +342,7 @@ class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
           hintText: 'Enter account number',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          errorText: _showValidationErrors ? _accountNumberError : null,
         ),
       ],
     );
@@ -249,6 +354,7 @@ class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
     required String hintText,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
+    String? errorText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,16 +372,39 @@ class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
           controller: controller,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
-          onChanged: (_) => _updatePaymentInfo(),
+          onChanged: (_) {
+            if (_showValidationErrors) {
+              // Clear error when user starts typing
+              setState(() {
+                if (controller == _accountHolderController) {
+                  _accountHolderError = null;
+                } else if (controller == _accountNumberController) {
+                  _accountNumberError = null;
+                } else if (controller == _bankNameController) {
+                  _bankNameError = null;
+                }
+              });
+            }
+            _updatePaymentInfo();
+          },
           decoration: InputDecoration(
             hintText: hintText,
+            errorText: errorText,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(
+                color: errorText != null ? Colors.red : Colors.grey[300]!,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF00C853)),
+              borderSide: BorderSide(
+                color: errorText != null ? Colors.red : const Color(0xFF00C853),
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.red),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -300,6 +429,9 @@ class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
               onChanged: (bool? value) {
                 setState(() {
                   _agreeToTerms = value ?? false;
+                  if (_showValidationErrors && _agreeToTerms) {
+                    _termsError = null;
+                  }
                 });
                 _updatePaymentInfo();
               },
@@ -310,20 +442,40 @@ class _PaymentMethodSelectionState extends State<PaymentMethodSelection> {
                 onTap: () {
                   setState(() {
                     _agreeToTerms = !_agreeToTerms;
+                    if (_showValidationErrors && _agreeToTerms) {
+                      _termsError = null;
+                    }
                   });
                   _updatePaymentInfo();
                 },
-                child: const Text(
+                child: Text(
                   'I agree to the Terms & Conditions',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.black87,
+                    color: _showValidationErrors && _termsError != null ? Colors.red : Colors.black87,
                   ),
                 ),
               ),
             ),
           ],
         ),
+        
+        // Terms error message
+        if (_showValidationErrors && _termsError != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.red.shade100,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.red.shade300),
+            ),
+            child: Text(
+              _termsError!,
+              style: TextStyle(color: Colors.red.shade800, fontSize: 12),
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,

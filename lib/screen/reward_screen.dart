@@ -322,6 +322,11 @@ class _RewardScreenState extends State<RewardScreen> {
       ),
       builder: (context) {
         Map<String, String>? paymentInfo;
+        Function()? validatePaymentForm;
+        Function()? validateDeliveryForm;
+        final paymentFormKey = GlobalKey<PaymentMethodSelectionState>();
+        final deliveryFormKey = GlobalKey<DeliveryInfoFormState>();
+        String generalErrorMessage = '';
         
         return StatefulBuilder(
           builder: (context, setState) {
@@ -428,6 +433,7 @@ class _RewardScreenState extends State<RewardScreen> {
                     if ((reward.cashornot??'0') == "1") ...[
                       // Cash reward - show payment method selection
                       PaymentMethodSelection(
+                        key: paymentFormKey,
                         onPaymentInfoChanged: (info) {
                           setState(() {
                             paymentInfo = info;
@@ -437,10 +443,15 @@ class _RewardScreenState extends State<RewardScreen> {
                         onTermsPressed: () {
                           _showTermsAndConditions();
                         },
+                        onValidationReady: (validationFunction) {
+                          validatePaymentForm = validationFunction;
+                          print('Debug: Payment validation function registered');
+                        },
                       ),
                     ] else ...[
                       // Non-cash reward - show delivery info form
                       DeliveryInfoForm(
+                        key: deliveryFormKey,
                         onDeliveryInfoChanged: (info) {
                           setState(() {
                             paymentInfo = info;
@@ -450,12 +461,40 @@ class _RewardScreenState extends State<RewardScreen> {
                         onTermsPressed: () {
                           _showTermsAndConditions();
                         },
+                        onValidationReady: (validationFunction) {
+                          validateDeliveryForm = validationFunction;
+                          print('Debug: Delivery validation function registered');
+                        },
                       ),
                     ],
 
                     const SizedBox(height: 30),
 
-                    // Error message
+                    // Error messages area
+                    if (generalErrorMessage.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.shade300),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, color: Colors.red.shade800, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                generalErrorMessage,
+                                style: TextStyle(color: Colors.red.shade800, fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),],
+
+                    // API Error message
                     Consumer<RewardsProvider>(
                       builder: (context, provider, _) {
                         if (provider.errorMessage.isNotEmpty) {
@@ -483,84 +522,119 @@ class _RewardScreenState extends State<RewardScreen> {
                             : 'Redeem Now',
                         width: double.infinity,
                         isLoading: rewardsProvider.isLoading,
-                        onPressed: hasEnoughPoints && paymentInfo != null 
-                            ? () async {
-                                print('Debug: Starting redemption process for reward ${reward.id}');
-                                print('Debug: Payment info: $paymentInfo');
-                                print('Debug: Has enough points: $hasEnoughPoints');
-                                
-                                try {
-                                  final success = await rewardsProvider
-                                      .redeemReward(reward.id, paymentInfo!,reward.cashornot??"0");
-                                  
-                                  print('Debug: Redemption result: $success');
-                                  
+                        onPressed: () async {
+                          print('Debug: Redeem button pressed');
+                          print('Debug: Has enough points: $hasEnoughPoints');
+                          print('Debug: Payment info: $paymentInfo');
+                          
+                          // Clear previous error
+                          setState(() {
+                            generalErrorMessage = '';
+                          });
+                          
+                          // Validate form fields first
+                          bool isFormValid = false;
+                          
+                          if ((reward.cashornot??'0') == "1") {
+                            // Validate payment form
+                            print('Debug: Validating payment form');
+                            final paymentState = paymentFormKey.currentState;
+                            if (paymentState != null) {
+                              isFormValid = paymentState.validateFields();
+                              print('Debug: Payment form validation result: $isFormValid');
+                            } else {
+                              print('Debug: Payment form state is null!');
+                            }
+                          } else {
+                            // Validate delivery form  
+                            print('Debug: Validating delivery form');
+                            final deliveryState = deliveryFormKey.currentState;
+                            if (deliveryState != null) {
+                              isFormValid = deliveryState.validateFields();
+                              print('Debug: Delivery form validation result: $isFormValid');
+                            } else {
+                              print('Debug: Delivery form state is null!');
+                            }
+                          }
+                          
+                          // If validation fails, don't close dialog and don't proceed
+                          if (!isFormValid) {
+                            print('Debug: Form validation failed, staying on dialog');
+                            setState(() {
+                              generalErrorMessage = 'Please fill in all required fields and agree to terms & conditions';
+                            });
+                            return;
+                          }
+                          
+                          // After form is valid, check if user has enough points
+                          if (!hasEnoughPoints) {
+                            setState(() {
+                              generalErrorMessage = "You don't have enough points to redeem this reward";
+                            });
+                            return;
+                          }
+                          
+                          // If we reach here, form is valid and user has enough points
+                          print('Debug: Starting redemption process for reward ${reward.id}');
+                          print('Debug: Payment info: $paymentInfo');
+                          
+                          try {
+                            final success = await rewardsProvider
+                                .redeemReward(reward.id, paymentInfo!,reward.cashornot??"0");
+                            
+                            print('Debug: Redemption result: $success');
+                            
+                            Navigator.pop(context);
+                            
+                            if (success) {
+                              // Show success dialog with API message
+                              final successMessage = rewardsProvider.successMessage.isNotEmpty
+                                  ? rewardsProvider.successMessage
+                                  : 'Your reward "${reward.title}" has been successfully redeemed. You will receive further details via your registered contact information.';
+                              
+                              MessageDialog.showSuccess(
+                                context: context,
+                                title: 'Redemption Successful!',
+                                message: successMessage,
+                                buttonText: 'OK',
+                                onButtonPressed: () {
                                   Navigator.pop(context);
-                                  
-                                  if (success) {
-                                    // Show success dialog with API message
-                                    final successMessage = rewardsProvider.successMessage.isNotEmpty
-                                        ? rewardsProvider.successMessage
-                                        : 'Your reward "${reward.title}" has been successfully redeemed. You will receive further details via your registered contact information.';
-                                    
-                                    MessageDialog.showSuccess(
-                                      context: context,
-                                      title: 'Redemption Successful!',
-                                      message: successMessage,
-                                      buttonText: 'OK',
-                                      onButtonPressed: () {
-                                        Navigator.pop(context);
-                                        // Refresh the rewards list
-                                        _loadData();
-                                      },
-                                    );
-                                  } else {
-                                    // Show error dialog with the actual error message from API
-                                    final errorMessage = rewardsProvider.errorMessage.isNotEmpty 
-                                        ? rewardsProvider.errorMessage 
-                                        : 'Unable to process your redemption at this time. Please try again later.';
-                                    
-                                    MessageDialog.showError(
-                                      context: context,
-                                      title: 'Redemption Failed',
-                                      message: errorMessage,
-                                      buttonText: 'Try Again',
-                                      onButtonPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                    );
-                                  }
-                                } catch (e) {
-                                  print('Debug: Exception during redemption: $e');
+                                  // Refresh the rewards list
+                                  _loadData();
+                                },
+                              );
+                            } else {
+                              // Show error dialog with the actual error message from API
+                              final errorMessage = rewardsProvider.errorMessage.isNotEmpty 
+                                  ? rewardsProvider.errorMessage 
+                                  : 'Unable to process your redemption at this time. Please try again later.';
+                              
+                              MessageDialog.showError(
+                                context: context,
+                                title: 'Redemption Failed',
+                                message: errorMessage,
+                                buttonText: 'Try Again',
+                                onButtonPressed: () {
                                   Navigator.pop(context);
-                                  
-                                  // Show error dialog for exceptions
-                                  MessageDialog.showError(
-                                    context: context,
-                                    title: 'Something Went Wrong',
-                                    message: 'An unexpected error occurred while processing your request. Please check your internet connection and try again.',
-                                    buttonText: 'OK',
-                                    onButtonPressed: () {
-                                      Navigator.pop(context);
-                                    },
-                                  );
-                                }
-                              }
-                            : () {
-                                print('Debug: Button pressed but disabled');
-                                print('Debug: hasEnoughPoints: $hasEnoughPoints');
-                                print('Debug: paymentInfo: $paymentInfo');
-                                print('Debug: cashornot: ${reward.cashornot}');
-                                if (!hasEnoughPoints) {
-                                  Navigator.pop(context);
-
-                                  snackBar(context, title: "You don't have enough points to redeem this reward");
-                                } else if (paymentInfo == null) {
-                                  Navigator.pop(context);
-
-                                  snackBar(context, title: "Please fill in your payment information and agree to terms");
-                                }
-                              }),
+                                },
+                              );
+                            }
+                          } catch (e) {
+                            print('Debug: Exception during redemption: $e');
+                            Navigator.pop(context);
+                            
+                            // Show error dialog for exceptions
+                            MessageDialog.showError(
+                              context: context,
+                              title: 'Something Went Wrong',
+                              message: 'An unexpected error occurred while processing your request. Please check your internet connection and try again.',
+                              buttonText: 'OK',
+                              onButtonPressed: () {
+                                Navigator.pop(context);
+                              },
+                            );
+                          }
+                        }),
 
                     const SizedBox(height: 20),
                   ],

@@ -5,26 +5,44 @@ class DeliveryInfoForm extends StatefulWidget {
   final Function(Map<String, String>?) onDeliveryInfoChanged;
   final bool showTermsConditions;
   final VoidCallback? onTermsPressed;
+  final Function(Function())? onValidationReady;
 
   const DeliveryInfoForm({
     Key? key,
     required this.onDeliveryInfoChanged,
     this.showTermsConditions = true,
     this.onTermsPressed,
+    this.onValidationReady,
   }) : super(key: key);
 
   @override
-  _DeliveryInfoFormState createState() => _DeliveryInfoFormState();
+  DeliveryInfoFormState createState() => DeliveryInfoFormState();
 }
 
-class _DeliveryInfoFormState extends State<DeliveryInfoForm> {
+class DeliveryInfoFormState extends State<DeliveryInfoForm> {
   bool _agreeToTerms = false;
+  bool _showValidationErrors = false;
   
   // Controllers for form fields
   final _nameController = TextEditingController();
   final _contactNumberController = TextEditingController();
   final _addressController = TextEditingController();
+  
+  // Validation errors
+  String? _nameError;
+  String? _contactNumberError;
+  String? _addressError;
+  String? _termsError;
 
+  @override
+  void initState() {
+    super.initState();
+    // Provide the validation function to parent after frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onValidationReady?.call(validateFields);
+    });
+  }
+  
   @override
   void dispose() {
     _nameController.dispose();
@@ -34,26 +52,81 @@ class _DeliveryInfoFormState extends State<DeliveryInfoForm> {
   }
 
   void _updateDeliveryInfo() {
+    if (!_showValidationErrors) {
+      // Only validate silently when not showing errors
+      if (!_agreeToTerms) {
+        widget.onDeliveryInfoChanged(null);
+        return;
+      }
+
+      Map<String, String> deliveryInfo = {
+        'name': _nameController.text.trim(),
+        'contactNumber': _contactNumberController.text.trim(),
+        'address': _addressController.text.trim(),
+      };
+
+      // Check if all required fields are filled
+      if (deliveryInfo['name']!.isEmpty || 
+          deliveryInfo['contactNumber']!.isEmpty ||
+          deliveryInfo['address']!.isEmpty) {
+        widget.onDeliveryInfoChanged(null);
+        return;
+      }
+
+      widget.onDeliveryInfoChanged(deliveryInfo);
+    }
+  }
+  
+  bool validateFields() {
+    setState(() {
+      _showValidationErrors = true;
+      _nameError = null;
+      _contactNumberError = null;
+      _addressError = null;
+      _termsError = null;
+    });
+    
+    bool isValid = true;
+    
+    // Validate name
+    if (_nameController.text.trim().isEmpty) {
+      _nameError = 'Full name is required';
+      isValid = false;
+    }
+    
+    // Validate contact number
+    if (_contactNumberController.text.trim().isEmpty) {
+      _contactNumberError = 'Contact number is required';
+      isValid = false;
+    }
+    
+    // Validate address
+    if (_addressController.text.trim().isEmpty) {
+      _addressError = 'Delivery address is required';
+      isValid = false;
+    }
+    
+    // Validate terms agreement
     if (!_agreeToTerms) {
-      widget.onDeliveryInfoChanged(null);
-      return;
+      _termsError = 'Please agree to terms and conditions';
+      isValid = false;
     }
-
-    Map<String, String> deliveryInfo = {
-      'name': _nameController.text.trim(),
-      'contactNumber': _contactNumberController.text.trim(),
-      'address': _addressController.text.trim(),
-    };
-
-    // Check if all required fields are filled
-    if (deliveryInfo['name']!.isEmpty || 
-        deliveryInfo['contactNumber']!.isEmpty ||
-        deliveryInfo['address']!.isEmpty) {
+    
+    setState(() {});
+    
+    if (isValid) {
+      Map<String, String> deliveryInfo = {
+        'name': _nameController.text.trim(),
+        'contactNumber': _contactNumberController.text.trim(),
+        'address': _addressController.text.trim(),
+      };
+      
+      widget.onDeliveryInfoChanged(deliveryInfo);
+    } else {
       widget.onDeliveryInfoChanged(null);
-      return;
     }
-
-    widget.onDeliveryInfoChanged(deliveryInfo);
+    
+    return isValid;
   }
 
   @override
@@ -89,6 +162,7 @@ class _DeliveryInfoFormState extends State<DeliveryInfoForm> {
             controller: _nameController,
             hintText: 'Enter your full name',
             keyboardType: TextInputType.text,
+            errorText: _showValidationErrors ? _nameError : null,
           ),
           const SizedBox(height: 16),
 
@@ -99,6 +173,7 @@ class _DeliveryInfoFormState extends State<DeliveryInfoForm> {
             hintText: 'Enter your contact number',
             keyboardType: TextInputType.phone,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            errorText: _showValidationErrors ? _contactNumberError : null,
           ),
           const SizedBox(height: 16),
 
@@ -109,6 +184,7 @@ class _DeliveryInfoFormState extends State<DeliveryInfoForm> {
             hintText: 'Enter your complete address',
             keyboardType: TextInputType.multiline,
             maxLines: 3,
+            errorText: _showValidationErrors ? _addressError : null,
           ),
 
           // Terms & Conditions
@@ -128,6 +204,7 @@ class _DeliveryInfoFormState extends State<DeliveryInfoForm> {
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     int maxLines = 1,
+    String? errorText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,16 +223,39 @@ class _DeliveryInfoFormState extends State<DeliveryInfoForm> {
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           maxLines: maxLines,
-          onChanged: (_) => _updateDeliveryInfo(),
+          onChanged: (_) {
+            if (_showValidationErrors) {
+              // Clear error when user starts typing
+              setState(() {
+                if (controller == _nameController) {
+                  _nameError = null;
+                } else if (controller == _contactNumberController) {
+                  _contactNumberError = null;
+                } else if (controller == _addressController) {
+                  _addressError = null;
+                }
+              });
+            }
+            _updateDeliveryInfo();
+          },
           decoration: InputDecoration(
             hintText: hintText,
+            errorText: errorText,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(
+                color: errorText != null ? Colors.red : Colors.grey[300]!,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF00C853)),
+              borderSide: BorderSide(
+                color: errorText != null ? Colors.red : const Color(0xFF00C853),
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.red),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -180,6 +280,9 @@ class _DeliveryInfoFormState extends State<DeliveryInfoForm> {
               onChanged: (bool? value) {
                 setState(() {
                   _agreeToTerms = value ?? false;
+                  if (_showValidationErrors && _agreeToTerms) {
+                    _termsError = null;
+                  }
                 });
                 _updateDeliveryInfo();
               },
@@ -190,20 +293,40 @@ class _DeliveryInfoFormState extends State<DeliveryInfoForm> {
                 onTap: () {
                   setState(() {
                     _agreeToTerms = !_agreeToTerms;
+                    if (_showValidationErrors && _agreeToTerms) {
+                      _termsError = null;
+                    }
                   });
                   _updateDeliveryInfo();
                 },
-                child: const Text(
+                child: Text(
                   'I agree to the Terms & Conditions',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.black87,
+                    color: _showValidationErrors && _termsError != null ? Colors.red : Colors.black87,
                   ),
                 ),
               ),
             ),
           ],
         ),
+        
+        // Terms error message
+        if (_showValidationErrors && _termsError != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.red.shade100,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.red.shade300),
+            ),
+            child: Text(
+              _termsError!,
+              style: TextStyle(color: Colors.red.shade800, fontSize: 12),
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
