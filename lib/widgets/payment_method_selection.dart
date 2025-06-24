@@ -31,6 +31,11 @@ class PaymentMethodSelectionState extends State<PaymentMethodSelection> {
   final _accountNumberController = TextEditingController();
   final _bankNameController = TextEditingController();
   
+  // Focus nodes for text fields
+  final _accountHolderFocusNode = FocusNode();
+  final _accountNumberFocusNode = FocusNode();
+  final _bankNameFocusNode = FocusNode();
+  
   // Validation errors
   String? _accountHolderError;
   String? _accountNumberError;
@@ -52,6 +57,9 @@ class PaymentMethodSelectionState extends State<PaymentMethodSelection> {
     _accountHolderController.dispose();
     _accountNumberController.dispose();
     _bankNameController.dispose();
+    _accountHolderFocusNode.dispose();
+    _accountNumberFocusNode.dispose();
+    _bankNameFocusNode.dispose();
     super.dispose();
   }
 
@@ -318,6 +326,7 @@ class PaymentMethodSelectionState extends State<PaymentMethodSelection> {
           _buildInputField(
             label: 'Bank Name',
             controller: _bankNameController,
+            focusNode: _bankNameFocusNode,
             hintText: 'Enter bank name',
             keyboardType: TextInputType.text,
             errorText: _showValidationErrors ? _bankNameError : null,
@@ -329,6 +338,7 @@ class PaymentMethodSelectionState extends State<PaymentMethodSelection> {
         _buildInputField(
           label: 'Account Holder Name',
           controller: _accountHolderController,
+          focusNode: _accountHolderFocusNode,
           hintText: 'Enter account holder name',
           keyboardType: TextInputType.text,
           errorText: _showValidationErrors ? _accountHolderError : null,
@@ -339,6 +349,7 @@ class PaymentMethodSelectionState extends State<PaymentMethodSelection> {
         _buildInputField(
           label: 'Account Number',
           controller: _accountNumberController,
+          focusNode: _accountNumberFocusNode,
           hintText: 'Enter account number',
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -352,6 +363,7 @@ class PaymentMethodSelectionState extends State<PaymentMethodSelection> {
     required String label,
     required TextEditingController controller,
     required String hintText,
+    required FocusNode focusNode,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     String? errorText,
@@ -370,8 +382,22 @@ class PaymentMethodSelectionState extends State<PaymentMethodSelection> {
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
+          focusNode: focusNode,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
+          autocorrect: false,
+          enableSuggestions: false,
+          textInputAction: TextInputAction.next,
+          onEditingComplete: () {
+            // Move to next field when user taps "next" on keyboard
+            if (focusNode == _bankNameFocusNode) {
+              _accountHolderFocusNode.requestFocus();
+            } else if (focusNode == _accountHolderFocusNode) {
+              _accountNumberFocusNode.requestFocus();
+            } else {
+              focusNode.unfocus();
+            }
+          },
           onChanged: (_) {
             if (_showValidationErrors) {
               // Clear error when user starts typing

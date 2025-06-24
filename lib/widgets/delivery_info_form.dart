@@ -28,6 +28,11 @@ class DeliveryInfoFormState extends State<DeliveryInfoForm> {
   final _contactNumberController = TextEditingController();
   final _addressController = TextEditingController();
   
+  // Focus nodes for text fields
+  final _nameFocusNode = FocusNode();
+  final _contactNumberFocusNode = FocusNode();
+  final _addressFocusNode = FocusNode();
+  
   // Validation errors
   String? _nameError;
   String? _contactNumberError;
@@ -48,6 +53,9 @@ class DeliveryInfoFormState extends State<DeliveryInfoForm> {
     _nameController.dispose();
     _contactNumberController.dispose();
     _addressController.dispose();
+    _nameFocusNode.dispose();
+    _contactNumberFocusNode.dispose();
+    _addressFocusNode.dispose();
     super.dispose();
   }
 
@@ -160,6 +168,7 @@ class DeliveryInfoFormState extends State<DeliveryInfoForm> {
           _buildInputField(
             label: 'Full Name',
             controller: _nameController,
+            focusNode: _nameFocusNode,
             hintText: 'Enter your full name',
             keyboardType: TextInputType.text,
             errorText: _showValidationErrors ? _nameError : null,
@@ -170,6 +179,7 @@ class DeliveryInfoFormState extends State<DeliveryInfoForm> {
           _buildInputField(
             label: 'Contact Number',
             controller: _contactNumberController,
+            focusNode: _contactNumberFocusNode,
             hintText: 'Enter your contact number',
             keyboardType: TextInputType.phone,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -181,6 +191,7 @@ class DeliveryInfoFormState extends State<DeliveryInfoForm> {
           _buildInputField(
             label: 'Delivery Address',
             controller: _addressController,
+            focusNode: _addressFocusNode,
             hintText: 'Enter your complete address',
             keyboardType: TextInputType.multiline,
             maxLines: 3,
@@ -201,6 +212,7 @@ class DeliveryInfoFormState extends State<DeliveryInfoForm> {
     required String label,
     required TextEditingController controller,
     required String hintText,
+    required FocusNode focusNode,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     int maxLines = 1,
@@ -220,9 +232,21 @@ class DeliveryInfoFormState extends State<DeliveryInfoForm> {
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
+          focusNode: focusNode,
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           maxLines: maxLines,
+          textInputAction: maxLines > 1 ? TextInputAction.newline : TextInputAction.next,
+          onEditingComplete: () {
+            // Move to next field when user taps "next" on keyboard
+            if (focusNode == _nameFocusNode) {
+              _contactNumberFocusNode.requestFocus();
+            } else if (focusNode == _contactNumberFocusNode) {
+              _addressFocusNode.requestFocus();
+            } else {
+              focusNode.unfocus();
+            }
+          },
           onChanged: (_) {
             if (_showValidationErrors) {
               // Clear error when user starts typing

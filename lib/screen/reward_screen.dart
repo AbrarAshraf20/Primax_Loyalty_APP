@@ -12,6 +12,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/payment_method_selection.dart';
 import '../widgets/delivery_info_form.dart';
 import '../widgets/message_dialog.dart';
+import 'primax_products/comman_back_button.dart';
 
 class RewardScreen extends StatefulWidget {
   final VoidCallback? onBackPressed;
@@ -305,132 +306,288 @@ class _RewardScreenState extends State<RewardScreen> {
   }
 
   void _showRewardDetails(Reward reward) {
-    final rewardsProvider =
-        Provider.of<RewardsProvider>(context, listen: false);
-    final profileProvider =
-        Provider.of<ProfileProvider>(context, listen: false);
-    final userPoints = profileProvider.userProfile?.tokens ?? 0;
-    final hasEnoughPoints = userPoints >= int.parse(reward.priceInTokens);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      enableDrag: true,
-
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RewardDetailsScreen(reward: reward),
       ),
-      builder: (context) {
-        Map<String, String>? paymentInfo;
-        Function()? validatePaymentForm;
-        Function()? validateDeliveryForm;
-        final paymentFormKey = GlobalKey<PaymentMethodSelectionState>();
-        final deliveryFormKey = GlobalKey<DeliveryInfoFormState>();
-        String generalErrorMessage = '';
-        
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Container(
-              padding: const EdgeInsets.all(20),
-              height: MediaQuery.of(context).size.height * 0.95,
-              child: SingleChildScrollView(
+    );
+  }
+}
+
+class RewardDetailsScreen extends StatefulWidget {
+  final Reward reward;
+
+  const RewardDetailsScreen({Key? key, required this.reward}) : super(key: key);
+
+  @override
+  _RewardDetailsScreenState createState() => _RewardDetailsScreenState();
+}
+class _RewardDetailsScreenState extends State<RewardDetailsScreen> {
+  @override
+  Widget build(BuildContext context) {
+    final rewardsProvider = Provider.of<RewardsProvider>(context, listen: false);
+    final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
+    final userPoints = profileProvider.userProfile?.tokens ?? 0;
+    final hasEnoughPoints = userPoints >= int.parse(widget.reward.priceInTokens);
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+
+        title: const Text(
+          'Reward Details',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.black,
+          ),
+        ),
+        centerTitle: true,
+        leading: CommonBackButton(
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Container(
+        color: Colors.grey[50],
+        child: _buildContent(hasEnoughPoints),
+      ),
+    );
+  }
+
+  Widget _buildContent(bool hasEnoughPoints) {
+    Map<String, String>? paymentInfo;
+    Function()? validatePaymentForm;
+    Function()? validateDeliveryForm;
+    final paymentFormKey = GlobalKey<PaymentMethodSelectionState>();
+    final deliveryFormKey = GlobalKey<DeliveryInfoFormState>();
+    String generalErrorMessage = '';
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Reward image with loading indicator
+              Center(
+                child: Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: widget.reward.image != null
+                        ? Image.network(
+                            '${AppConfig.imageBaseUrl}${widget.reward.image}',
+                            height: 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                height: 200,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CircularProgressIndicator(
+                                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00C853)),
+                                        value: loadingProgress.expectedTotalBytes != null
+                                            ? loadingProgress.cumulativeBytesLoaded /
+                                                loadingProgress.expectedTotalBytes!
+                                            : null,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'Loading image...',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (ctx, error, _) => Container(
+                              height: 200,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: Colors.grey[300]!,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Failed to load image',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : Container(
+                            height: 200,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 2,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.image_outlined,
+                                  size: 48,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'No image available',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Reward info card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Close button
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ),
-
-                    // Reward image
-                    if (reward.image != null)
-                      Center(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            '${AppConfig.imageBaseUrl}${reward.image}',
-                            height: 180,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (ctx, error, _) => Container(
-                              height: 180,
-                              width: double.infinity,
-                              color: Colors.grey[300],
-                              child: const Center(child: Icon(Icons.error)),
-                            ),
-                          ),
-                        ),
-                      )
-                    else
-                      Center(
-                        child: Container(
-                          height: 180,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Center(child: Icon(Icons.image)),
-                        ),
-                      ),
-
-                    const SizedBox(height: 20),
-
                     // Reward title
                     Text(
-                      reward.title,
+                      widget.reward.title,
                       style: const TextStyle(
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
 
                     // Reward description
                     Text(
-                      reward.itemName,
+                      widget.reward.itemName,
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey[700],
+                        color: Colors.grey[600],
+                        height: 1.4,
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
                     // Points required
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF00C853),
-                              Color(0xFF00B0FF),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(30),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.stars_rounded,
+                          color: Colors.amber[600],
+                          size: 20,
                         ),
-                        child: Text(
-                          '${reward.priceInTokens} points required',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                        const SizedBox(width: 8),
+                        Text(
+                          'Points Required: ',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF00C853), Color(0xFF00B0FF)],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${widget.reward.priceInTokens} pts',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                  ],
+                ),
+              ),
 
-                    const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
+              // Form container
+              Container(
+                constraints: const BoxConstraints(
+                  minHeight: 300,
+                ),
+                child: Column(
+                  children: [
                     // Show different forms based on cashornot value
-                    if ((reward.cashornot??'0') == "1") ...[
+                    if ((widget.reward.cashornot ?? '0') == "1") ...[
                       // Cash reward - show payment method selection
                       PaymentMethodSelection(
                         key: paymentFormKey,
@@ -467,186 +624,231 @@ class _RewardScreenState extends State<RewardScreen> {
                         },
                       ),
                     ],
-
-                    const SizedBox(height: 30),
-
-                    // Error messages area
-                    if (generalErrorMessage.isNotEmpty) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.shade300),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.error_outline, color: Colors.red.shade800, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                generalErrorMessage,
-                                style: TextStyle(color: Colors.red.shade800, fontSize: 14),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),],
-
-                    // API Error message
-                    Consumer<RewardsProvider>(
-                      builder: (context, provider, _) {
-                        if (provider.errorMessage.isNotEmpty) {
-                          return Container(
-                            padding: const EdgeInsets.all(8),
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              provider.errorMessage,
-                              style: TextStyle(color: Colors.red.shade800),
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-
-                    // Redeem button
-                    CustomButton(
-                        text: rewardsProvider.isLoading
-                            ? 'Processing...'
-                            : 'Redeem Now',
-                        width: double.infinity,
-                        isLoading: rewardsProvider.isLoading,
-                        onPressed: () async {
-                          print('Debug: Redeem button pressed');
-                          print('Debug: Has enough points: $hasEnoughPoints');
-                          print('Debug: Payment info: $paymentInfo');
-                          
-                          // Clear previous error
-                          setState(() {
-                            generalErrorMessage = '';
-                          });
-                          
-                          // Validate form fields first
-                          bool isFormValid = false;
-                          
-                          if ((reward.cashornot??'0') == "1") {
-                            // Validate payment form
-                            print('Debug: Validating payment form');
-                            final paymentState = paymentFormKey.currentState;
-                            if (paymentState != null) {
-                              isFormValid = paymentState.validateFields();
-                              print('Debug: Payment form validation result: $isFormValid');
-                            } else {
-                              print('Debug: Payment form state is null!');
-                            }
-                          } else {
-                            // Validate delivery form  
-                            print('Debug: Validating delivery form');
-                            final deliveryState = deliveryFormKey.currentState;
-                            if (deliveryState != null) {
-                              isFormValid = deliveryState.validateFields();
-                              print('Debug: Delivery form validation result: $isFormValid');
-                            } else {
-                              print('Debug: Delivery form state is null!');
-                            }
-                          }
-                          
-                          // If validation fails, don't close dialog and don't proceed
-                          if (!isFormValid) {
-                            print('Debug: Form validation failed, staying on dialog');
-                            setState(() {
-                              generalErrorMessage = 'Please fill in all required fields and agree to terms & conditions';
-                            });
-                            return;
-                          }
-                          
-                          // After form is valid, check if user has enough points
-                          if (!hasEnoughPoints) {
-                            setState(() {
-                              generalErrorMessage = "You don't have enough points to redeem this reward";
-                            });
-                            return;
-                          }
-                          
-                          // If we reach here, form is valid and user has enough points
-                          print('Debug: Starting redemption process for reward ${reward.id}');
-                          print('Debug: Payment info: $paymentInfo');
-                          
-                          try {
-                            final success = await rewardsProvider
-                                .redeemReward(reward.id, paymentInfo!,reward.cashornot??"0");
-                            
-                            print('Debug: Redemption result: $success');
-                            
-                            Navigator.pop(context);
-                            
-                            if (success) {
-                              // Show success dialog with API message
-                              final successMessage = rewardsProvider.successMessage.isNotEmpty
-                                  ? rewardsProvider.successMessage
-                                  : 'Your reward "${reward.title}" has been successfully redeemed. You will receive further details via your registered contact information.';
-                              
-                              MessageDialog.showSuccess(
-                                context: context,
-                                title: 'Redemption Successful!',
-                                message: successMessage,
-                                buttonText: 'OK',
-                                onButtonPressed: () {
-                                  Navigator.pop(context);
-                                  // Refresh the rewards list
-                                  _loadData();
-                                },
-                              );
-                            } else {
-                              // Show error dialog with the actual error message from API
-                              final errorMessage = rewardsProvider.errorMessage.isNotEmpty 
-                                  ? rewardsProvider.errorMessage 
-                                  : 'Unable to process your redemption at this time. Please try again later.';
-                              
-                              MessageDialog.showError(
-                                context: context,
-                                title: 'Redemption Failed',
-                                message: errorMessage,
-                                buttonText: 'Try Again',
-                                onButtonPressed: () {
-                                  Navigator.pop(context);
-                                },
-                              );
-                            }
-                          } catch (e) {
-                            print('Debug: Exception during redemption: $e');
-                            Navigator.pop(context);
-                            
-                            // Show error dialog for exceptions
-                            MessageDialog.showError(
-                              context: context,
-                              title: 'Something Went Wrong',
-                              message: 'An unexpected error occurred while processing your request. Please check your internet connection and try again.',
-                              buttonText: 'OK',
-                              onButtonPressed: () {
-                                Navigator.pop(context);
-                              },
-                            );
-                          }
-                        }),
-
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
-            );
-          },
+
+              const SizedBox(height: 30),
+
+              // Error messages area
+              if (generalErrorMessage.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red.shade800, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          generalErrorMessage,
+                          style: TextStyle(color: Colors.red.shade800, fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                )],
+              // API Error message
+              Consumer<RewardsProvider>(
+                builder: (context, provider, _) {
+                  if (provider.errorMessage.isNotEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        provider.errorMessage,
+                        style: TextStyle(color: Colors.red.shade800),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+
+              // Redeem button
+              Consumer<RewardsProvider>(
+                builder: (context, rewardsProvider, _) {
+                  return CustomButton(
+                    text: rewardsProvider.isLoading ? 'Processing...' : 'Redeem Now',
+                    width: double.infinity,
+                    isLoading: rewardsProvider.isLoading,
+                    onPressed: () async {
+                      print('Debug: Redeem button pressed');
+                      print('Debug: Has enough points: $hasEnoughPoints');
+                      print('Debug: Payment info: $paymentInfo');
+
+                      // Clear previous error
+                      setState(() {
+                        generalErrorMessage = '';
+                      });
+
+                      // Validate form fields first
+                      bool isFormValid = false;
+
+                      if ((widget.reward.cashornot ?? '0') == "1") {
+                        // Validate payment form
+                        print('Debug: Validating payment form');
+                        final paymentState = paymentFormKey.currentState;
+                        if (paymentState != null) {
+                          isFormValid = paymentState.validateFields();
+                          print('Debug: Payment form validation result: $isFormValid');
+                        } else {
+                          print('Debug: Payment form state is null!');
+                        }
+                      } else {
+                        // Validate delivery form
+                        print('Debug: Validating delivery form');
+                        final deliveryState = deliveryFormKey.currentState;
+                        if (deliveryState != null) {
+                          isFormValid = deliveryState.validateFields();
+                          print('Debug: Delivery form validation result: $isFormValid');
+                        } else {
+                          print('Debug: Delivery form state is null!');
+                        }
+                      }
+
+                      // If validation fails, show error
+                      if (!isFormValid) {
+                        print('Debug: Form validation failed, showing error');
+                        setState(() {
+                          generalErrorMessage = 'Please fill in all required fields and agree to terms & conditions';
+                        });
+                        return;
+                      }
+
+                      // After form is valid, check if user has enough points
+                      if (!hasEnoughPoints) {
+                        setState(() {
+                          generalErrorMessage = "You don't have enough points to redeem this reward";
+                        });
+                        return;
+                      }
+
+                      // If we reach here, form is valid and user has enough points
+                      print('Debug: Starting redemption process for reward ${widget.reward.id}');
+                      print('Debug: Payment info: $paymentInfo');
+
+                      try {
+                        final success = await rewardsProvider.redeemReward(
+                          widget.reward.id,
+                          paymentInfo!,
+                          widget.reward.cashornot ?? "0",
+                        );
+
+                        print('Debug: Redemption result: $success');
+
+                        if (success) {
+                          // Show success dialog with API message
+                          final successMessage = rewardsProvider.successMessage.isNotEmpty
+                              ? rewardsProvider.successMessage
+                              : 'Your reward "${widget.reward.title}" has been successfully redeemed. You will receive further details via your registered contact information.';
+
+                          _showSuccessDialog(successMessage);
+                        } else {
+                          // Show error message in the UI
+                          setState(() {
+                            generalErrorMessage = rewardsProvider.errorMessage.isNotEmpty
+                                ? rewardsProvider.errorMessage
+                                : 'Unable to process your redemption at this time. Please try again later.';
+                          });
+                        }
+                      } catch (e) {
+                        print('Debug: Exception during redemption: $e');
+                        setState(() {
+                          generalErrorMessage = 'An unexpected error occurred while processing your request. Please check your internet connection and try again.';
+                        });
+                      }
+                    },
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
         );
       },
     );
   }
 
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          content: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check,
+                    color: Colors.green,
+                    size: 50,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Success!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close dialog
+                      Navigator.of(context).pop(); // Go back to reward list
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00C853),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      'Done',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   void _showTermsAndConditions() {
     showDialog(

@@ -646,11 +646,11 @@ class _VerifySerialState extends State<VerifySerial> {
               ),
               const SizedBox(height: 20),
 
-              Text('Serial Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Text('Scratch Card Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
                 controller: _serialNumController,
-                hintText: 'Serial Number',
+                hintText: 'Scratch Card Number',
                 hintStyle: TextStyle(color: Colors.grey),
                 validator: (value) => value == null || value.isEmpty ? 'Please enter serial number' : null,
               ),
