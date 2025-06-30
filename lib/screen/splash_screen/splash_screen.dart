@@ -80,13 +80,13 @@ class _SplashScreenState extends State<SplashScreen> {
           SizedBox(
             width: double.maxFinite,
             height: double.maxFinite,
-            child: Image.asset('assets/images/img_splash.png', fit: BoxFit.cover),
+            child: Image.asset('assets/images/splash.png', fit: BoxFit.cover),
           ),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/images/splash_logo.png', height: 200, width: 200),
+                Image.asset('assets/images/app_home.png', height: 200, width: 200,color: Colors.white,),
                 const SizedBox(height: 20),
                 Text(
                   appName,

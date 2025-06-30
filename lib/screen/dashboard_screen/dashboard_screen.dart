@@ -194,7 +194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Expanded(
                         child: _buildNavItem("assets/icons/Group4.svg", "Lucky", 3)),
                     Expanded(
-                        child: _buildNavItem("assets/icons/Group4.svg", "Profile", 4)),
+                        child: _buildNavItem("assets/icons/user.svg", "Profile", 4)),
                   ],
                 ),
               ),

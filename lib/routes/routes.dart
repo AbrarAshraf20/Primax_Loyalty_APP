@@ -4,6 +4,7 @@ import 'package:primax/screen/calaim_point_screen/claim_points_screen.dart';
 import 'package:primax/screen/create_account_screen/create_account_screen.dart';
 import 'package:primax/screen/lucky_draw/lucky_draw_detail_screen.dart';
 import 'package:primax/screen/lucky_draw/lucky_draw_screen.dart';
+import 'package:primax/screen/lucky_draw/lucky_draw_winner_screen.dart';
 
 // Import screens
 import '../screen/login_screen/enter_otp.dart';
@@ -37,6 +38,7 @@ class Routes {
   static const String rewards = '/rewards';
   static const String luckyDraw = '/lucky-draw';
   static const String luckyDrawDetails = '/lucky-draw-details';
+  static const String luckyDrawWinner = '/lucky-draw-winner';
   static const String donation = '/donation';
   static const String pointsHistory = '/points-history';
   static const String forgotPassword = '/forgot-password';
@@ -59,6 +61,10 @@ class Routes {
     rewards: (context) =>  RewardScreen(),
     luckyDraw: (context) => LuckyDrawScreen(),
     luckyDrawDetails: (context) => LuckyDrawDetailScreen(),
+    luckyDrawWinner: (context) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      return LuckyDrawWinnerScreen(drawId: args?['drawId'] ?? 0);
+    },
     donation: (context) => DonationScreen(),
     // platform: (context) => PlatformScreen(),
     pointsHistory: (context) =>  ClaimedPointsScreen(),

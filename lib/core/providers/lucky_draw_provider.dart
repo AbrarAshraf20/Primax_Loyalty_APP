@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:primax/core/di/service_locator.dart';
 import 'package:primax/models/lucky_draw.dart';
+import 'package:primax/models/lucky_draw_history_model.dart';
 import 'package:primax/services/lucky_draw_service.dart';
 import '../network/api_exception.dart';
 
@@ -13,12 +14,14 @@ class LuckyDrawProvider extends ChangeNotifier {
   String _errorMessage = '';
   List<LuckyDraw> _luckyDraws = [];
   LuckyDraw? _selectedDraw;
+  List<LuckyDrawHistory> _luckyDrawHistory = [];
 
   // Getters
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
   List<LuckyDraw> get luckyDraws => _luckyDraws;
   LuckyDraw? get selectedDraw => _selectedDraw;
+  List<LuckyDrawHistory> get luckyDrawHistory => _luckyDrawHistory;
 
   // Fetch all lucky draws
   Future<void> fetchLuckyDraws() async {
@@ -57,6 +60,22 @@ class LuckyDrawProvider extends ChangeNotifier {
     } catch (e) {
       _setError('Failed to enter lucky draw: ${e.toString()}');
       return false;
+    }
+  }
+
+  // Fetch lucky draw history
+  Future<void> fetchLuckyDrawHistory() async {
+    _setLoading(true);
+    _clearErrors();
+
+    try {
+      final history = await _luckyDrawService.getLuckyDrawHistory();
+      _luckyDrawHistory = history;
+      _setLoading(false);
+    } on ApiException catch (e) {
+      _setError(e.message);
+    } catch (e) {
+      _setError('Failed to load lucky draw history: ${e.toString()}');
     }
   }
 

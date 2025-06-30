@@ -63,7 +63,7 @@ class ScanService {
         '/verify-serial',
         fields: {
           'barcode': serialNumber, // Include the scan number in the API call
-          'name': name,
+          // 'name': name,
           'mobile': mobile,
           'product_name': item,
           'city': city,

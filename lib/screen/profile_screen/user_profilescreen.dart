@@ -257,7 +257,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       launchNewScreen(context, Routes.pointsHistory);
                       // Navigator.pushNamed(context, Routes.pointsHistory);
                     }),
-                    _buildMenuItem("Rewards History", Icon(Icons.card_giftcard, color: Colors.black87), context, () {
+                    _buildMenuItem("History", Icon(Icons.card_giftcard, color: Colors.black87), context, () {
                       // Navigate to rewards history screen
                       Navigator.pushNamed(context, Routes.rewardsHistory);
                     }),

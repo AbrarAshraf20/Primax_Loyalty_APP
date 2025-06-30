@@ -280,17 +280,21 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                         backgroundColor: const Color(0xffE9E9E9),
                         child: SvgPicture.asset('assets/icons/Vector.svg'),
                       ),
-                      // if (draw.isActive)
-                        // TextButton(
-                        //   onPressed: () {
-                        //     _showWinnerDialog(context);
-                        //   },
-                        //   child: const Text(
-                        //     'Show\nWinner',
-                        //     style: TextStyle(fontSize: 10, color: Colors.blue),
-                        //     textAlign: TextAlign.center,
-                        //   ),
-                        // )
+                      const SizedBox(height: 8),
+                     if(draw.status=='off') TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            Routes.luckyDrawWinner,
+                            arguments: {'drawId': draw.id},
+                          );
+                        },
+                        child: const Text(
+                          'Here is the\nWinners',
+                          style: TextStyle(fontSize: 9, color: Colors.blue),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
                     ],
                   ),
                 ],

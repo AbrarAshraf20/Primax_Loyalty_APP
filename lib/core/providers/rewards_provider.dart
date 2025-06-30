@@ -167,6 +167,12 @@ class RewardsProvider extends ChangeNotifier {
     _errorMessage = '';
   }
 
+  // Public method to clear error message from UI
+  void clearErrorMessage() {
+    _errorMessage = '';
+    notifyListeners();
+  }
+
   void _setSuccess(String message) {
     _successMessage = message;
     notifyListeners();

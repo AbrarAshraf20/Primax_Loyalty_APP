@@ -2,6 +2,7 @@
 import '../core/network/api_client.dart';
 import '../core/network/api_exception.dart';
 import '../models/lucky_draw.dart';
+import '../models/lucky_draw_history_model.dart';
 
 class LuckyDrawService {
   final ApiClient _apiClient = ApiClient();
@@ -89,6 +90,50 @@ class LuckyDrawService {
         return winnersData.cast<Map<String, dynamic>>();
       } else {
         throw ApiException(message: 'Failed to load winners');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
+
+  // Fetch lucky draw winner info
+  Future<Map<String, dynamic>> fetchLuckyDrawWinner(int drawId) async {
+    try {
+      final response = await _apiClient.post(
+        '/lucky_draw_winner',
+        body: {'id': drawId},
+        requiresAuth: true,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        return response.data;
+      } else {
+        throw ApiException(message: 'Failed to load winner info');
+      }
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
+
+  // Get lucky draw history
+  Future<List<LuckyDrawHistory>> getLuckyDrawHistory() async {
+    try {
+      final response = await _apiClient.get(
+        '/draw-history',
+        requiresAuth: true,
+      );
+
+      if (response.isSuccess && response.data != null) {
+        final List<dynamic> historyData = response.data['data'] ?? [];
+        return historyData
+            .map((item) => LuckyDrawHistory.fromJson(item))
+            .toList();
+      } else {
+        throw ApiException(message: 'Failed to load lucky draw history');
       }
     } on ApiException {
       rethrow;

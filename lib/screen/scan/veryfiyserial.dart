@@ -241,7 +241,7 @@ class _VerifySerialState extends State<VerifySerial> {
   File? _selectedImage;
   
   // Form controllers
-  final TextEditingController _nameController = TextEditingController();
+  // final TextEditingController _nameController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _itemController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
@@ -254,7 +254,7 @@ class _VerifySerialState extends State<VerifySerial> {
   
   @override
   void dispose() {
-    _nameController.dispose();
+    // _nameController.dispose();
     _mobileController.dispose();
     _itemController.dispose();
     _cityController.dispose();
@@ -409,7 +409,7 @@ class _VerifySerialState extends State<VerifySerial> {
     try {
       final success = await scanProvider.verifySerial(
         serialNumber: widget.scanNumber, // Pass the scan number
-        name: _nameController.text,
+        name: '',
         mobile: _mobileController.text,
         item: _itemController.text,
         city: _cityController.text,
@@ -614,7 +614,7 @@ class _VerifySerialState extends State<VerifySerial> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Serial number of inverter', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text('Scratch number of inverter', style: TextStyle(fontWeight: FontWeight.bold)),
                             Text(widget.scanNumber, style: TextStyle(fontSize: 16)),
                           ],
                         ),
@@ -646,24 +646,24 @@ class _VerifySerialState extends State<VerifySerial> {
               ),
               const SizedBox(height: 20),
 
-              Text('Scratch Card Number', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Text('Serial number of inverter', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               const SizedBox(height: 5),
               CustomTextFormField(
                 controller: _serialNumController,
-                hintText: 'Scratch Card Number',
+                hintText: 'Serial number of inverter',
                 hintStyle: TextStyle(color: Colors.grey),
                 validator: (value) => value == null || value.isEmpty ? 'Please enter serial number' : null,
               ),
               const SizedBox(height: 20),
 
-              Text('Name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 5),
-              CustomTextFormField(
-                controller: _nameController,
-                hintText: 'Name',
-                hintStyle: TextStyle(color: Colors.grey),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
-              ),
+              // Text('Name', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              // const SizedBox(height: 5),
+              // CustomTextFormField(
+              //   controller: _nameController,
+              //   hintText: 'Name',
+              //   hintStyle: TextStyle(color: Colors.grey),
+              //   validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
+              // ),
               const SizedBox(height: 20),
 
               Text('Mobile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
@@ -672,7 +672,7 @@ class _VerifySerialState extends State<VerifySerial> {
                 controller: _mobileController,
                 hintText: 'Mobile',
                 hintStyle: TextStyle(color: Colors.grey),
-                // keyboardType: TextInputType.phone,
+                textInputType: TextInputType.phone,
                 validator: (value) => value == null || value.isEmpty ? 'Please enter mobile number' : null,
               ),
               const SizedBox(height: 20),

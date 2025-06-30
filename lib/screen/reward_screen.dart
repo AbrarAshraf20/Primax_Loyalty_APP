@@ -348,7 +348,12 @@ class _RewardDetailsScreenState extends State<RewardDetailsScreen> {
         ),
         centerTitle: true,
         leading: CommonBackButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Clear any error messages when navigating back
+            final rewardsProvider = Provider.of<RewardsProvider>(context, listen: false);
+            rewardsProvider.clearErrorMessage();
+            Navigator.pop(context);
+          },
         ),
       ),
       body: Container(
@@ -653,26 +658,7 @@ class _RewardDetailsScreenState extends State<RewardDetailsScreen> {
                     ],
                   ),
                 )],
-              // API Error message
-              Consumer<RewardsProvider>(
-                builder: (context, provider, _) {
-                  if (provider.errorMessage.isNotEmpty) {
-                    return Container(
-                      padding: const EdgeInsets.all(8),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        provider.errorMessage,
-                        style: TextStyle(color: Colors.red.shade800),
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
+              // Remove duplicate API error message display since it's handled in generalErrorMessage
 
               // Redeem button
               Consumer<RewardsProvider>(
@@ -686,10 +672,13 @@ class _RewardDetailsScreenState extends State<RewardDetailsScreen> {
                       print('Debug: Has enough points: $hasEnoughPoints');
                       print('Debug: Payment info: $paymentInfo');
 
-                      // Clear previous error
+                      // Clear previous errors
                       setState(() {
                         generalErrorMessage = '';
                       });
+                      
+                      // Clear provider error message
+                      rewardsProvider.clearErrorMessage();
 
                       // Validate form fields first
                       bool isFormValid = false;
@@ -827,6 +816,10 @@ class _RewardDetailsScreenState extends State<RewardDetailsScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
+                      // Clear any error messages
+                      final rewardsProvider = Provider.of<RewardsProvider>(context, listen: false);
+                      rewardsProvider.clearErrorMessage();
+                      
                       Navigator.of(context).pop(); // Close dialog
                       Navigator.of(context).pop(); // Go back to reward list
                     },
