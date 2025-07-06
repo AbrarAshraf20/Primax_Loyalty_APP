@@ -158,6 +158,10 @@ class ProfileService {
         if (longitude != null) 'longitude': longitude,
       };
 
+      // Debug logging
+      print('🚀 Sending address to API:');
+      print('  Fields: $fields');
+
       final response = await _apiClient.post(
         '/address',
         body: fields,
@@ -222,6 +226,36 @@ class ProfileService {
     } on ApiException {
       rethrow;
     }
+    //   final fields = {
+    //     'street': street,
+    //     'address': address,
+    //     'postcode': postalCode,
+    //     'apartment': apartment,
+    //     'label': label,
+    //     // Include location coordinates if available
+    //     if (latitude != null) 'latitude': latitude,
+    //     if (longitude != null) 'longitude': longitude,
+    //   };
+    //  print('fields $fields');
+    //   final response = await _apiClient.post(
+    //     '/address',
+    //     body: fields,
+    //   );
+    //
+    //   if (response.data != null) {
+    //     // Use new parseAddresses method to handle different response formats
+    //     final addresses = Address.parseAddresses(response.data);
+    //     if (addresses.isNotEmpty) {
+    //       return addresses.first;
+    //     } else {
+    //       throw ApiException(message: 'Invalid address data in response');
+    //     }
+    //   } else {
+    //     throw ApiException(message: 'Invalid response from server');
+    //   }
+    // } on ApiException {
+    //   rethrow;
+    // }
   }
 
   // Delete an address

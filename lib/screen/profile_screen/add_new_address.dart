@@ -64,11 +64,16 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
           print('Error parsing location coordinates: $e');
         }
       }
+    } else {
+      // For new addresses, ensure Home is selected by default
+      _selectedLabel = 'Home';
     }
 
     // Delay location permission request to avoid context issues
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _requestLocationPermission();
+      // Force UI update to ensure default label selection is visible
+      setState(() {});
     });
   }
 
@@ -631,6 +636,16 @@ class _AddNewAddressScreenState extends State<AddNewAddressScreen> {
       // Convert coordinates to strings for API
       final latitude = _currentPosition.latitude.toString();
       final longitude = _currentPosition.longitude.toString();
+
+      // Debug print to check the label value
+      print('🏷️ Selected Label: $_selectedLabel');
+      print('📍 Address Details:');
+      print('  - Street: ${_streetController.text}');
+      print('  - Address: ${_addressController.text}');
+      print('  - Postal Code: ${_postalCodeController.text}');
+      print('  - Apartment: ${_apartmentController.text}');
+      print('  - Latitude: $latitude');
+      print('  - Longitude: $longitude');
 
       if (_isEditMode && widget.address?.id != null) {
         // Update existing address

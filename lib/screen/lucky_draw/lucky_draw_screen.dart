@@ -281,7 +281,7 @@ class _LuckyDrawScreenState extends State<LuckyDrawScreen> {
                         child: SvgPicture.asset('assets/icons/Vector.svg'),
                       ),
                       const SizedBox(height: 8),
-                     if(draw.status=='off') TextButton(
+                      TextButton(
                         onPressed: () {
                           Navigator.pushNamed(
                             context,

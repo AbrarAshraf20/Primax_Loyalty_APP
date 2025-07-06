@@ -126,9 +126,76 @@ class _LuckyDrawWinnerScreenState extends State<LuckyDrawWinnerScreen> {
   }
 
   Widget _buildWinnerContent() {
-    if (_winnerData == null) {
-      return const Center(
-        child: Text('No winner data available'),
+    if (_winnerData == null || _winnerData!.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.emoji_events_outlined,
+                  size: 60,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(height: 32),
+              const Text(
+                'Winners Not Announced Yet',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'The winners for this lucky draw have not been announced yet. Please check back soon for the exciting results!',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.schedule,
+                      color: Colors.blue,
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Stay tuned for announcement',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 

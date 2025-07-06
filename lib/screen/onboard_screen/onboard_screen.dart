@@ -163,6 +163,7 @@ class _OnboardScreenState extends State<OnboardScreen> {
               Padding(
                 padding: const EdgeInsets.only(left: 16.0, bottom: 10),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Smooth Page Indicator
                     SmoothPageIndicator(
@@ -175,8 +176,6 @@ class _OnboardScreenState extends State<OnboardScreen> {
                         dotColor: Colors.grey.shade400,
                       ),
                     ),
-                    const SizedBox(width: 90),
-
                     CustomButton(
                       borderRadius: 30,
                       width: 130,

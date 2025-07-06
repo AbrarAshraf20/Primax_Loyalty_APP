@@ -88,31 +88,31 @@ class _MyAddressesScreenState extends State<MyAddressesScreen> {
         elevation: 0,
       ),
       body: _buildBody(),
-      floatingActionButton: Container(
-        width: 56,
-        height: 56,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF00C853), Color(0xFF00B0FF)],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 8.0,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () => _navigateToAddAddress(context),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
-      ),
+      // floatingActionButton: Container(
+      //   width: 56,
+      //   height: 56,
+      //   decoration: const BoxDecoration(
+      //     shape: BoxShape.circle,
+      //     gradient: LinearGradient(
+      //       begin: Alignment.topLeft,
+      //       end: Alignment.bottomRight,
+      //       colors: [Color(0xFF00C853), Color(0xFF00B0FF)],
+      //     ),
+      //     boxShadow: [
+      //       BoxShadow(
+      //         color: Colors.black26,
+      //         blurRadius: 8.0,
+      //         offset: Offset(0, 3),
+      //       ),
+      //     ],
+      //   ),
+      //   child: FloatingActionButton(
+      //     onPressed: () => _navigateToAddAddress(context),
+      //     backgroundColor: Colors.transparent,
+      //     elevation: 0,
+      //     child: const Icon(Icons.add, color: Colors.white),
+      //   ),
+      // ),
     );
   }
 
@@ -393,6 +393,9 @@ class _MyAddressesScreenState extends State<MyAddressesScreen> {
   }
 
   Future<void> _confirmDeleteAddress(BuildContext context, Address address) async {
+    // Store the scaffold messenger before async operations
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -421,6 +424,9 @@ class _MyAddressesScreenState extends State<MyAddressesScreen> {
     );
     
     if (confirmed == true && address.id != null) {
+      // Check if widget is still mounted before proceeding
+      if (!mounted) return;
+      
       setState(() {
         _isLoading = true;
       });
@@ -429,26 +435,34 @@ class _MyAddressesScreenState extends State<MyAddressesScreen> {
         final profileProvider = Provider.of<ProfileProvider>(context, listen: false);
         final success = await profileProvider.deleteAddress(address.id!);
         
+        // Check if widget is still mounted before using context
+        if (!mounted) return;
+        
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             const SnackBar(content: Text('Address deleted successfully')),
           );
           _loadAddresses();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             SnackBar(content: Text('Error: ${profileProvider.errorMessage}')),
           );
-          setState(() {
-            _isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting address: $e')),
-        );
-        setState(() {
-          _isLoading = false;
-        });
+        // Use the stored scaffold messenger instead of context
+        // scaffoldMessenger.showSnackBar(
+        //   SnackBar(content: Text('Error deleting address: $e')),
+        // );
+        // if (mounted) {
+        //   setState(() {
+        //     _isLoading = false;
+        //   });
+        // }
       }
     }
   }
