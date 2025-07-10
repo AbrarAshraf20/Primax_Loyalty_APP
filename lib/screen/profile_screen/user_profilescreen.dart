@@ -21,10 +21,18 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
+  void initState() {
+    super.initState();
+    // Schedule the profile data loading after the current frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProfileData();
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Always load profile data when dependencies change (e.g., when returning from edit screen)
-    _loadProfileData();
+    // Don't load data here as it can cause setState during build
   }
 
   // Fetch drawer data when screen loads
