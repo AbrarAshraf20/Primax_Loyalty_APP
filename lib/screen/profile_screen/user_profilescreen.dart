@@ -170,8 +170,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                               _buildStatusButton(
                                 SvgPicture.asset("assets/icons/verification.svg"),
                                 // Check email verification status (emailVerifiedAt is not null)
-                                user?.emailVerifiedAt != null ? "Verified" : "Unverified",
-                                user?.emailVerifiedAt != null ? Colors.green : Colors.orange,
+                                user?.status=='verified' ? "Verified" : "Unverified",
+                                user?.status=='verified' ? Colors.green : Colors.orange,
                               ),
                               _buildStatusButton(
                                user?.role =='Installer' ? SvgPicture.asset("assets/icons/installer.svg")

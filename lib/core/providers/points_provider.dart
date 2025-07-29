@@ -1,7 +1,7 @@
 // lib/providers/points_provider.dart
 import 'package:flutter/foundation.dart';
 import 'package:primax/core/di/service_locator.dart';
-import 'package:primax/models/point_transaction.dart';
+import 'package:primax/models/claimed_point.dart';
 import 'package:primax/services/points_service.dart';
 import '../network/api_exception.dart';
 
@@ -11,13 +11,13 @@ class PointsProvider extends ChangeNotifier {
   // State variables
   bool _isLoading = false;
   String _errorMessage = '';
-  List<PointTransaction> _transactions = [];
+  List<ClaimedPoint> _claimedPoints = [];
   int _totalPoints = 0;
 
   // Getters
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
-  List<PointTransaction> get transactions => _transactions;
+  List<ClaimedPoint> get claimedPoints => _claimedPoints;
   int get totalPoints => _totalPoints;
 
   // Get claimed points history
@@ -27,7 +27,7 @@ class PointsProvider extends ChangeNotifier {
 
     try {
       final transactions = await _pointsService.getClaimedPoints();
-      _transactions = transactions;
+      _claimedPoints = transactions;
 
       _setLoading(false);
     } on ApiException catch (e) {
@@ -70,7 +70,7 @@ class PointsProvider extends ChangeNotifier {
         _pointsService.getTotalPoints(),
       ]);
 
-      _transactions = results[0] as List<PointTransaction>;
+      _claimedPoints = results[0] as List<ClaimedPoint>;
       _totalPoints = results[1] as int;
 
       _setLoading(false);

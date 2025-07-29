@@ -145,7 +145,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildBottomNavBar() {
     return Container(
-      height: 95, // Optimized height for iOS
+      height: 120, // Optimized height for iOS
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -192,7 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Expanded(
-                        child: _buildNavItem("assets/icons/Group4.svg", "Lucky", 3)),
+                        child: _buildNavItem("assets/icons/Group4.svg", "Lucky Draw", 3)),
                     Expanded(
                         child: _buildNavItem("assets/icons/user.svg", "Profile", 4)),
                   ],

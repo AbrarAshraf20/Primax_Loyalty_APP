@@ -8,6 +8,7 @@ class User {
   final String? cnicNumber;
   final String? companyShopNumber;
   final String? role;
+  final String? status;
   final int? tokens;
   final String? image;
   final String? emailVerifiedAt;
@@ -24,6 +25,7 @@ class User {
     this.cnicNumber,
     this.companyShopNumber,
     required this.role,
+    required this.status,
     required this.tokens,
     this.image,
     this.emailVerifiedAt,
@@ -42,6 +44,7 @@ class User {
       cnicNumber: json['cnic_number'],
       companyShopNumber: json['company_shop_number'],
       role: json['role'],
+      status: json['status'],
       tokens: json['tokens'],
       image: json['image'],
       emailVerifiedAt: json['email_verified_at'],
@@ -61,6 +64,7 @@ class User {
       'cnic_number': cnicNumber,
       'company_shop_number': companyShopNumber,
       'role': role,
+      'status': status,
       'tokens': tokens,
       'image': image,
       'email_verified_at': emailVerifiedAt,

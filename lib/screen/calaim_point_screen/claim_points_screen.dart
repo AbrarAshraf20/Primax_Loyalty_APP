@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:primax/core/providers/profile_provider.dart';
+import 'package:primax/core/utils/app_config.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:primax/core/providers/points_provider.dart';
-import 'package:primax/models/point_transaction.dart';
+import 'package:primax/models/claimed_point.dart';
 
 class ClaimedPointsScreen extends StatefulWidget {
   const ClaimedPointsScreen({Key? key}) : super(key: key);
@@ -115,11 +116,8 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
   Widget _buildPointsSummary(BuildContext context) {
     return Consumer<PointsProvider>(
       builder: (context, pointsProvider, _) {
-        // Calculate total points
-        int totalPoints = 0;
-        for (var transaction in pointsProvider.transactions) {
-          totalPoints += transaction.points;
-        }
+        // Get total claimed entries count
+        int totalClaims = pointsProvider.claimedPoints.length;
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -152,7 +150,7 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Total Claimed Points',
+                        'Total Claims',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -161,7 +159,7 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '$totalPoints',
+                        '$totalClaims',
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -203,7 +201,7 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
                       ),
                     ),
                     Text(
-                      '${pointsProvider.transactions.length}',
+                      '${pointsProvider.claimedPoints.length}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -259,7 +257,7 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
           );
         }
 
-        if (pointsProvider.transactions.isEmpty) {
+        if (pointsProvider.claimedPoints.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -272,7 +270,7 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'No points claimed yet',
+                  'No claims found',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
@@ -281,7 +279,7 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Scan products to claim points',
+                  'Your claimed products will appear here',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
@@ -294,21 +292,27 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
 
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemCount: pointsProvider.transactions.length,
+          itemCount: pointsProvider.claimedPoints.length,
           itemBuilder: (context, index) {
-            final transaction = pointsProvider.transactions[index];
-            return _buildTransactionCard(context, transaction);
+            final claimedPoint = pointsProvider.claimedPoints[index];
+            return _buildClaimedPointCard(context, claimedPoint);
           },
         );
       },
     );
   }
+  getSelectedUTCDateTime(String utcTime) async {
+    DateTime utcDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').parseUtc(utcTime);
+    DateTime localDateTime = utcDateTime.toLocal();
+    String dataTime = DateFormat('MMM dd, yyyy • hh:mm a').format(localDateTime);
+    return dataTime;
+  }
+  String createDate='';
+Future<String> getCorrectTime(date) async {
+   return await getSelectedUTCDateTime(date);
 
-  Widget _buildTransactionCard(BuildContext context, PointTransaction transaction) {
-    // Format the date
-    final dateFormat = DateFormat('MMM dd, yyyy • hh:mm a');
-    final formattedDate = dateFormat.format(transaction.createdAt);
-
+}
+  Widget _buildClaimedPointCard(BuildContext context, ClaimedPoint claimedPoint) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -325,95 +329,138 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left: Item icon
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF4F4F6),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: SvgPicture.asset(
-                'assets/icons/scan.svg', // Icon for scanned items
-                height: 24,
-                width: 24,
-                color: const Color(0xFF00B0FF),
-              ),
-            ),
-            const SizedBox(width: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left: Product icon
+                Container(
+                  // padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F4F6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      '${AppConfig.imageBaseUrl}${claimedPoint.image}',
+                      height: 40,
+                      width: 40,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
 
-            // Middle: Transaction details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    transaction.itemName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    formattedDate,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
+                // Middle: Product details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.confirmation_number_outlined, size: 14, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
                       Text(
-                        'Serial: ${transaction.serialNumber}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
+                        claimedPoint.productName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        claimedPoint.name,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      FutureBuilder<String>(
+                        future: getCorrectTime(claimedPoint.createdAt.toString()),
+                        builder: (context, snapshot) {
+                          return Text(
+                            snapshot.data ?? '...',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          );
+                        }
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            // Right: Points amount
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  SvgPicture.asset(
-                    'assets/icons/Group2.svg',
-                    height: 14,
-                    width: 14,
-                    color: Colors.green,
+                // Right: Serial number
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '+${transaction.points}',
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE3F2FD),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    claimedPoint.serial,
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF1976D2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Additional details row
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                _buildDetailItem(Icons.phone, claimedPoint.mobile),
+                _buildDetailItem(Icons.location_city, claimedPoint.city),
+                _buildDetailItem(Icons.confirmation_number, 'S/N: ${claimedPoint.serialNum}'),
+              ],
+            ),
+            if (claimedPoint.customerAddress.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      claimedPoint.customerAddress,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDetailItem(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: Colors.grey[600]),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
     );
   }
 }

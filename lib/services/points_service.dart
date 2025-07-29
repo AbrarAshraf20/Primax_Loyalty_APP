@@ -2,13 +2,13 @@
 import '../core/network/api_client.dart';
 import '../core/network/api_exception.dart';
 import '../core/di/service_locator.dart';
-import '../models/point_transaction.dart';
+import '../models/claimed_point.dart';
 
 class PointsService {
   final ApiClient _apiClient = locator<ApiClient>();
 
   // Get claimed points history
-  Future<List<PointTransaction>> getClaimedPoints() async {
+  Future<List<ClaimedPoint>> getClaimedPoints() async {
     try {
       final response = await _apiClient.get('/claimed_points');
 
@@ -16,7 +16,7 @@ class PointsService {
         final transactionsData = response.data['data'] as List;
 
         return transactionsData
-            .map((transactionJson) => PointTransaction.fromJson(transactionJson))
+            .map((transactionJson) => ClaimedPoint.fromJson(transactionJson))
             .toList();
       } else {
         return [];
