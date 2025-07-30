@@ -11,6 +11,7 @@ class ClaimedPoint {
   final String cnic;
   final String serialNum;
   final String image;
+  final String tokenPrice;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -27,6 +28,7 @@ class ClaimedPoint {
     required this.cnic,
     required this.serialNum,
     required this.image,
+    required this.tokenPrice,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -45,6 +47,7 @@ class ClaimedPoint {
       cnic: json['cnic'],
       serialNum: json['serial_num'],
       image: json['image'],
+      tokenPrice: json['token_price']?.toString() ?? '0',
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -64,6 +67,7 @@ class ClaimedPoint {
       'cnic': cnic,
       'serial_num': serialNum,
       'image': image,
+      'token_price': tokenPrice,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

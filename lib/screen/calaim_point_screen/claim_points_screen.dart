@@ -116,8 +116,12 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
   Widget _buildPointsSummary(BuildContext context) {
     return Consumer<PointsProvider>(
       builder: (context, pointsProvider, _) {
-        // Get total claimed entries count
+        // Calculate total consumed points and claims count
         int totalClaims = pointsProvider.claimedPoints.length;
+        int totalConsumedPoints = 0;
+        for (var claimedPoint in pointsProvider.claimedPoints) {
+          totalConsumedPoints += int.tryParse(claimedPoint.tokenPrice) ?? 0;
+        }
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -150,7 +154,7 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Total Claims',
+                        'Total Consumed Points',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -159,7 +163,7 @@ class _ClaimedPointsScreenState extends State<ClaimedPointsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '$totalClaims',
+                        '$totalConsumedPoints',
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -390,24 +394,62 @@ Future<String> getCorrectTime(date) async {
                   ),
                 ),
 
-                // Right: Serial number
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE3F2FD),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    claimedPoint.serial,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1976D2),
+                // Right: Token Price and Serial
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    // Token Price
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPicture.asset(
+                            'assets/icons/Group2.svg',
+                            height: 14,
+                            width: 14,
+                            color: Colors.green,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${claimedPoint.tokenPrice}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    // Serial Number
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE3F2FD),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        claimedPoint.serial,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF1976D2),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
