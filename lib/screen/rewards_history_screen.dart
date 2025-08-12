@@ -560,7 +560,7 @@ class _RewardsHistoryScreenState extends State<RewardsHistoryScreen> with Single
                   ),
                   const SizedBox(height: 8),
                   _buildDetailRow('Username', history.username),
-                  _buildDetailRow('Draw ID', history.luckyDrawId),
+                  // _buildDetailRow('Draw ID', history.luckyDrawId),
                   _buildDetailRow('Required Points', history.minimumPoints.toString()),
                   if (history.personName != null)
                     _buildDetailRow('Winner', history.personName!),

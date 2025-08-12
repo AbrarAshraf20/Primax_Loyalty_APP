@@ -76,7 +76,7 @@ class RewardsService {
       // Check if cash reward or non-cash reward
       if (cashornot == "1") {
         // Cash reward - send payment information
-        fields['payment_method'] = paymentInfo['method'] ?? ''; // Easypase jazz cash
+        // fields['payment_method'] = paymentInfo['method'] ?? ''; // Easypase jazz cash
         fields['account_holder_name'] = paymentInfo['accountHolderName'] ?? ''; // Name of the account holder
         fields['account_number'] = paymentInfo['accountNumber'] ?? '';
         fields['person_name'] = '';
@@ -85,7 +85,10 @@ class RewardsService {
         
         // Add bank name if payment method is bank account
         if (paymentInfo['method'] == 'bankAccount' && paymentInfo.containsKey('bankName')) {
-          fields['bank_name'] = paymentInfo['bankName']!;
+          fields['payment_method'] = paymentInfo['bankName']!;
+        }else{
+          fields['payment_method'] = paymentInfo['method'] ?? ''; // Easypase jazz cash
+
         }
       } else {
         // Non-cash reward - send delivery information

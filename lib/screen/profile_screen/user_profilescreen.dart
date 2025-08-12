@@ -51,6 +51,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           final authProvider = Provider.of<AuthProvider>(context);
 
           return Container(
+            margin: EdgeInsets.only(bottom: 30.0),
             decoration: BoxDecoration(
               image: DecorationImage(
                 image: AssetImage("assets/images/LuckyDraw.png"),

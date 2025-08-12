@@ -105,7 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: _pages.map((page) {
                 // Add bottom padding to each page to ensure content isn't hidden behind the nav bar
                 return Padding(
-                  padding: EdgeInsets.only(bottom: 85),
+                  padding: EdgeInsets.only(bottom: 110),
                   child: page,
                 );
               }).toList(),
