@@ -1,4 +1,4 @@
-# primax_luck_draw_app
+# Primax_Loyalty_APP
 
 A new Flutter project.
 
